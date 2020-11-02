@@ -1,0 +1,11 @@
+text="Customers Demands:"        rng=A1
+squeeze=n        par=D           rng=A2
+text="Customers Time Windows:"   rng=A4
+text="Lower limit:"              rng=A5
+squeeze=n        par=L           rng=A6
+text="Upper limit:"              rng=A8
+squeeze=n        par=U           rng=A9
+text="Total cost:"               rng=A11
+var=Cost.l                       rng=A12
+text="Solution Routes:"          rng=A13
+var=x.l                          rng=A14

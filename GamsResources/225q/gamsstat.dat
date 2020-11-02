@@ -1,0 +1,1252 @@
+=1
+-------------------------------------------------------------------------------
+=CDicopt 2         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+-------------------------------------------------------------------------------
+by Aldo Vecchietti, Director del Instituto INGAR,
+   CONICET, UTN, Santa Fe, Argentina
+by Ignacio E. Grossmann, Chemical Engineering Faculty,
+   Carnegie Mellon University, Pittsburgh, PA, USA
+-------------------------------------------------------------------------------
+=C*** This solver runs with a community license.
+=CCONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=0CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=C*** This solver runs with a community license.
+=1
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+=2
+    1  INPUT                                                                  (DEFAULT)
+    2  BRANCH * MAJERR MINERR JACERR                                          (DEFAULT)
+    3  OPTIMIZE                                                               (DEFAULT)
+    4  BRANCH * * * * * * MAJERR                                              (DEFAULT)
+    5  OUTPUT                                                                 (DEFAULT)
+    6  EXIT                                                                   (DEFAULT)
+    7  MAJERR MESSAGE MAJOR ERROR - TERMINATE                                 (DEFAULT)
+    8  EXIT                                                                   (DEFAULT)
+    9  MINERR MESSAGE MINOR ERROR - TERMINATE                                 (DEFAULT)
+   10  EXIT                                                                   (DEFAULT)
+   11  JACERR MESSAGE FUNCTION OR DERIVATIVE ERROR                            (DEFAULT)
+   12  OUTPUT                                                                 (DEFAULT)
+   13  EXIT                                                                   (DEFAULT)
+ 
+  ***  Line    1  INPUT
+ 
+  ***  Line    0  SET       LSAZRW   = TRUE
+ 
+  ***  Line    0  SET       LFEERR   =           0
+ 
+  ***  Line    0  SET       LFITER   =  1000000000
+ 
+  ***  Line    0  SET       RVTIME   =      1000.000000
+=1
+ 
+    The model has 285 variables and 394 constraints
+    with 1564 Jacobian elements, 424 of which are nonlinear.
+    The Hessian of the Lagrangian has 16 elements on the diagonal,
+    227 elements below the diagonal, and 234 nonlinear variables.
+=2
+ 
+  ***  Line    2  BRANCH with Lbranch =  1
+ 
+  ***  Line    3  OPTIMIZE
+ 
+Search for a first feasible solution
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        1.0862209141E+03 (Input point)
+=1
+ 
+                   Pre-triangular equations:   10
+                   Post-triangular equations:  123
+                   Definitional equations:     30
+ 
+=2
+      1   0        4.5000000000E+01 (After pre-processing)
+      2   0        2.0500000000E+01 (After scaling)
+      3   1    17  1.7447674419E+01 1.2E+01    10 1.0E+00    3 T  T
+      4   1    13  1.3347465354E+01 6.2E+00    25 1.0E+00    8 T  T
+ 
+ ** Feasible solution. Value of objective =    179.717695896
+ 
+Search for an optimal solution.
+ 
+ 
+   Iter Phase Ninf     Objective     RGmax    NSB   Step InItr MX OK
+      5   3       -2.6488085970E+02 7.6E+01    28 1.0E+00   18 T  T
+      6   3       -3.1445733333E+02 1.6E+01    26 1.0E+00   22 T  T
+      7   3       -3.1445733333E+02 0.0E+00    26
+=1
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+=2
+ 
+  ***  Line    4  BRANCH with Lbranch =  1
+ 
+  ***  Line    5  OUTPUT
+ 
+  ***  Line    6  EXIT
+=1
+ 
+ CONOPT time Total                            0.004 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+=2
+ 
+ Work length =     170543 double words  =    1.30 Mbytes
+    Estimate =     170543 double words  =    1.30 Mbytes
+    Max used =      74047 double words  =    0.56 Mbytes
+ 
+ Timing for Function Evaluations:
+ 
+ Statistics for FDEval-Fnc Calls:       502. Time:      0.000 T/C:    0.0000E+00
+ Statistics for FDEval-Drv Calls:       382. Time:      0.000 T/C:    0.0000E+00
+ Statistics for 2DDirLag   Calls:         0. Time:      0.000 T/C:    0.0000E+00
+ Statistics for 2DLagr     Calls:         0. Time:      0.000 T/C:    0.0000E+00
+ 
+=1
+=0IBM ILOG CPLEX   31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=1
+
+IBM ILOG CPLEX   31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=2
+=1
+--- GAMS/Cplex licensed for continuous and discrete problems.
+=2
+=1
+Cplex 12.10.0.0
+
+=2
+ 
+ 
+--------------------------------------------------------------
+CONTROL FILE STATISTICS
+--------------------------------------------------------------
+Rows : 395, columns : 378, nonzeroes : 1704
+Free Rows          : 0
+Iteration limit    : 1999999993
+Resource  limit    : 9.999840e+02
+Objective variable : 285
+Objective sense    : minimize
+Advanced basis     : no
+Binary variables   : 121
+Integer variables  : 9
+SOS1 variables     : 0
+SOS2 variables     : 0
+SemiCont variables : 0
+SemiInt variables  : 0
+OPTCA : 0.000000e+00 , OPTCR : 0.000000e+00
+Priorities         : no
+Cheat              : n.a.
+Cutoff             : n.a.
+Node limit         : 0
+ 
+ 
+
+
+Option Values:
+----------------------------------------------------
+usebasis              0
+cutoff                0
+tryint                0
+domlim                0
+advind                0
+aggcutlim             3
+aggfill               10
+aggind                -1
+auxrootthreads        0
+baralg                0
+barcolnz              0
+barcrossalg           0
+bardisplay            1
+barepcomp             1e-08
+bargrowth             1e+12
+baritlim              2100000000
+barmaxcor             -1
+barobjrng             1e+20
+barorder              0
+barqcpepcomp          1e-07
+barstartalg           1
+bbinterval            7
+bendersfeascuttol     1e-06
+bendersoptcuttol      1e-06
+.benderspartition     0
+benderspartitioninstage 0
+bendersstrategy       0
+bndstrenind           -1
+bqpcuts               0
+brdir                 0
+bttol                 0.9999
+calcqcpduals          1
+cliques               0
+clocktype             2
+clonelog              0
+coeredind             -1
+computeserver        
+covers                0
+cpumask               auto
+craind                1
+crossoveralg          default
+cutlo                 -1e+75
+cutpass               0
+cuts                  0
+cutsfactor            -1
+cutup                 1e+75
+datacheck             0
+depind                -1
+dettilim              1e+75
+disjcuts              0
+divetype              0
+divfltup              1e+299
+divfltlo              -1e+299
+.divflt               0
+dpriind               0
+dtprefix              bnd
+dtterm                1
+dumpcuts              0
+dumptree              0
+dumplp                0
+dynamicrows           -1
+eachcutlim            2100000000
+epagap                0
+epgap                 0
+epint                 1e-05
+eplin                 0.001
+epmrk                 0.01
+epopt                 1e-06
+epper                 1e-06
+eprelax               1e-06
+eprhs                 1e-06
+feasopt               0
+feasoptmode           0
+.feaspref             1
+fixoptfile            
+flowcovers            0
+flowpaths             0
+flushfiles            0
+folding               -1
+fpheur                0
+fraccand              200
+fraccuts              0
+fracpass              0
+freegamsmodel         0
+gubcovers             0
+heuristiceffort       1
+heurfreq              0
+iafile                
+iatriggerfile         
+iatriggertime         60
+iis                   0
+implbd                0
+interactive           0
+intsollim             2100000000
+itlim                 1999999993
+lbheur                0
+liftprojcuts          0
+lpalg                 default
+lpmethod              0
+ltol                  0
+mcfcuts               0
+memoryemphasis        0
+localimplied          0
+mipdisplay            4
+mipemphasis           0
+mipkappastats         -1
+mipinterval           0
+mipordind             1
+mipordtype            0
+mipsearch             0
+mipstart              0
+miptrace              
+miptracenode          100
+miptracetime          1
+miqcpstrat            0
+mircuts               0
+mpslongnum            1
+mtol                  0
+multobj               0
+multobjdisplay        1
+multobjmethod         0
+names                 1
+netdisplay            2
+netepopt              1e-06
+neteprhs              1e-06
+netfind               2
+netitlim              2100000000
+netppriind            0
+nodefileind           1
+nodelim               2100000000
+nodesel               1
+numericalemphasis     0
+objdif                0
+objllim               -1e+75
+objnabstol           
+objnreltol           
+objrng               
+objulim               1e+75
+parallelmode          1
+paramdisplay          1
+perind                0
+perlim                0
+polishtime            0
+polishafterepagap     0
+polishafterepgap      0
+polishafternode       2100000000
+polishafterintsol     2100000000
+polishaftertime       1e+75
+polishafterdettime    1e+75
+populatelim           20
+ppriind               0
+predual               0
+preind                1
+prelinear             1
+prepass               -1
+preslvnd              0
+pricelim              0
+printoptions          0
+probe                 0
+probetime             1e+75
+probedettime          1e+75
+probread              
+qpmakepsdind          1
+qpmethod              0
+qtolin                -1
+quality               0
+rampupdettimelimit    1e+75
+rampupduration        0
+rampuptimelimit       1e+75
+randomseed            0
+readflt               
+readparams            
+record                0
+reduce                3
+reinv                 0
+relaxfixedinfeas      0
+relaxpreind           -1
+relobjdif             0
+repairtries           0
+repeatpresolve        -1
+rerun                 yes
+rhsrng               
+rinsheur              0
+rngrestart            
+rtlcuts               0
+scaind                0
+secret               
+siftalg               0
+siftdisplay           1
+sifting               1
+siftitlim             2100000000
+simdisplay            1
+singlim               10
+solnpool              
+solnpoolmerge         
+solnpoolnumsym        10
+solnpoolagap          1e+75
+solnpoolcapacity      2100000000
+solnpoolgap           1e+75
+solnpoolintensity     0
+solnpoolpop           1
+solnpoolpopdel        
+solnpoolpoprepeat     
+solnpoolprefix        soln
+solnpoolreplace       0
+solutiontype          0
+optimalitytarget      0
+solvefinal            1
+startalg              0
+strongcandlim         10
+strongitlim           0
+subalg                0
+submipnodelim         500
+submipscale           0
+submipstartalg        0
+submipsubalg          0
+symmetry              -1
+threads               1
+tilim                 999.984
+trelim                1e+75
+tuning               
+tuningdisplay         1
+tuningmeasure         1
+tuningrepeat          1
+tuningtilim           199.997
+tuningdettilim        1e+07
+usercutcall           
+usercutfirst          10
+usercutfreq           10
+usercutinterval       100
+usercutmult           2
+usercutnewint         1
+usergdxin             bchin.gdx
+usergdxsol            bchsol.gdx
+usergdxname           bchout.gdx
+usergdxnameinc        bchout_i.gdx
+usergdxprefix         
+userheurcall          
+userheurfirst         10
+userheurfreq          10
+userheurinterval      100
+userheurmult          2
+userheurnewint        1
+userheurobjfirst      0
+userincbcall          
+userincbicall         
+userjobid             
+userkeep              0
+usercgmaxcols         2147483647
+usercgadvind          1
+usercgsolopt          0
+usercgdumplp          bchcgdump.lp
+userpricingcall       
+usersolvenodelp       
+varsel                0
+waitforenter          0
+warninglimit          10
+workdir               D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225q\
+workeralgorithm       0
+workmem               128
+writeannotation       
+writebas              
+writeflt              
+writelp               
+writemps              
+writemst              
+writeord              
+writeparam            
+writepre              
+writeprob             
+writesav              
+zerohalfcuts          0
+----------------------------------------------------
+
+=1
+Unable to load names.
+=2
+Version identifier: 12.10.0.0 | 2019-11-26 | 843d4de2ae
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 1
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_Simplex_Limits_Iterations               1999999993
+CPXPARAM_TimeLimit                               999.98400000000004
+CPXPARAM_Tune_TimeLimit                          199.99680000000001
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+CPXPARAM_WorkDir                                 "D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225q\"
+Tried aggregator 1 time.
+MIP Presolve eliminated 215 rows and 265 columns.
+MIP Presolve modified 157 coefficients.
+Reduced MIP has 180 rows, 113 columns, and 739 nonzeros.
+Reduced MIP has 77 binaries, 7 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.72 ticks)
+Probing fixed 5 vars, tightened 0 bounds.
+Probing time = 0.00 sec. (0.43 ticks)
+Cover probing fixed 0 vars, tightened 20 bounds.
+Tried aggregator 2 times.
+Detecting symmetries...
+MIP Presolve eliminated 42 rows and 8 columns.
+MIP Presolve modified 81 coefficients.
+Aggregator did 2 substitutions.
+Reduced MIP has 136 rows, 103 columns, and 646 nonzeros.
+Reduced MIP has 67 binaries, 7 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.70 ticks)
+Probing time = 0.00 sec. (0.35 ticks)
+Cover probing fixed 0 vars, tightened 3 bounds.
+Clique table members: 304.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+LP Presolve eliminated 6 rows and 2 columns.
+Reduced LP has 130 rows, 101 columns, and 622 nonzeros.
+Presolve time = 0.00 sec. (0.09 ticks)
+
+Iteration log . . .
+Iteration:     1   Scaled dual infeas =            87.258717
+Iteration:    13   Dual objective     =          -466.935624
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.01 sec. (0.51 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0      122.3174    18                    122.3174       59         
+      0     0      210.1589    18                    Cuts: 40      107         
+      0     0      232.9839    18                    Cuts: 57      149         
+      0     0      233.8364    18                    Cuts: 18      171         
+      0     0      234.2281    18                 MIRcuts: 15      182         
+      0     0      234.7070    18                    Cuts: 11      189         
+      0     0      237.0340    18                    Cuts: 24      218         
+      0     0      237.1573    18                  MIRcuts: 2      223         
+      0     0      237.3302    18                     Cuts: 5      225         
+*     0+    0                       363361.6738      237.3302            99.93%
+Found incumbent of value 363361.673808 after 0.03 sec. (18.15 ticks)
+      0     2      237.3302    18   363361.6738      237.4016      225   99.93%
+Elapsed time = 0.03 sec. (18.37 ticks, tree = 0.01 MB, solutions = 1)
+*    10+   10                          458.6892      238.1668            48.08%
+Found incumbent of value 458.689172 after 0.03 sec. (20.03 ticks)
+*    10+   10                          327.5134      238.1668            27.28%
+Found incumbent of value 327.513380 after 0.03 sec. (20.76 ticks)
+*    17    10      integral     0      258.6926      238.1668      359    7.93%
+Found incumbent of value 258.692563 after 0.05 sec. (21.32 ticks)
+*    23    11      integral     0      255.7807      239.1047      402    6.52%
+Found incumbent of value 255.780652 after 0.05 sec. (22.03 ticks)
+*    30+   15                          251.2852      239.5434             4.67%
+Found incumbent of value 251.285220 after 0.05 sec. (22.80 ticks)
+
+GUB cover cuts applied:  1
+Clique cuts applied:  9
+Mixed integer rounding cuts applied:  22
+Zero-half cuts applied:  9
+Gomory fractional cuts applied:  2
+
+Root node processing (before b&c):
+  Real time             =    0.03 sec. (18.39 ticks)
+Sequential b&c:
+  Real time             =    0.02 sec. (9.12 ticks)
+                          ------------
+Total (root+branch&cut) =    0.05 sec. (27.51 ticks)
+=1
+MIP status(101): integer optimal solution
+Cplex Time: 0.05sec (det. 27.51 ticks)
+=2
+=1
+Fixing integer variables, and solving final LP...
+=2
+Version identifier: 12.10.0.0 | 2019-11-26 | 843d4de2ae
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_Simplex_Limits_Iterations               1999999993
+CPXPARAM_TimeLimit                               999.98400000000004
+CPXPARAM_Tune_TimeLimit                          199.99680000000001
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+CPXPARAM_WorkDir                                 "D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225q\"
+Tried aggregator 1 time.
+LP Presolve eliminated 394 rows and 377 columns.
+Aggregator did 1 substitutions.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.20 ticks)
+=1
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.35 ticks)
+=2
+=1
+Proven optimal solution.
+=2
+=1
+
+MIP Solution:          251.285220    (689 iterations, 74 nodes)
+=2
+=1
+Final Solve:           251.285220    (0 iterations)
+
+=2
+=1
+Best possible:         251.285220
+=2
+=1
+Absolute gap:            0.000000
+=2
+=1
+Relative gap:            0.000000
+
+=2
+=C--- DICOPT: Setting up next NLP
+=CCONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=0CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=C*** This solver runs with a community license.
+=1
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+=2
+    1  INPUT                                                                  (DEFAULT)
+    2  BRANCH * MAJERR MINERR JACERR                                          (DEFAULT)
+    3  OPTIMIZE                                                               (DEFAULT)
+    4  BRANCH * * * * * * MAJERR                                              (DEFAULT)
+    5  OUTPUT                                                                 (DEFAULT)
+    6  EXIT                                                                   (DEFAULT)
+    7  MAJERR MESSAGE MAJOR ERROR - TERMINATE                                 (DEFAULT)
+    8  EXIT                                                                   (DEFAULT)
+    9  MINERR MESSAGE MINOR ERROR - TERMINATE                                 (DEFAULT)
+   10  EXIT                                                                   (DEFAULT)
+   11  JACERR MESSAGE FUNCTION OR DERIVATIVE ERROR                            (DEFAULT)
+   12  OUTPUT                                                                 (DEFAULT)
+   13  EXIT                                                                   (DEFAULT)
+ 
+  ***  Line    1  INPUT
+ 
+  ***  Line    0  SET       LSAZRW   = TRUE
+ 
+  ***  Line    0  SET       LFEERR   =           0
+ 
+  ***  Line    0  SET       LFITER   =  1000000000
+ 
+  ***  Line    0  SET       RVTIME   =      999.9370000
+ 
+  ***  Line    2  BRANCH with Lbranch =  1
+ 
+  ***  Line    3  OPTIMIZE
+ 
+Search for a first feasible solution
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        4.4892584429E+01 (Input point)
+=1
+ 
+                   Pre-triangular equations:   238
+                   Post-triangular equations:  32
+                   Definitional equations:     30
+ 
+=2
+      1   0        0.0000000000E+00 (After pre-processing)
+      2   0        0.0000000000E+00 (After scaling)
+ 
+ ** Feasible solution. Value of objective =    289.842049557
+ 
+Search for an optimal solution.
+ 
+ 
+   Iter Phase Ninf     Objective     RGmax    NSB   Step InItr MX OK
+      3   3        2.8984204956E+02 0.0E+00     0 0.0E+00    0 F  T
+      4   3        2.8984204956E+02 0.0E+00     0
+=1
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+=2
+ 
+  ***  Line    4  BRANCH with Lbranch =  1
+ 
+  ***  Line    5  OUTPUT
+ 
+  ***  Line    6  EXIT
+=1
+ 
+ CONOPT time Total                            0.001 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+=2
+ 
+ Work length =     169863 double words  =    1.30 Mbytes
+    Estimate =     169863 double words  =    1.30 Mbytes
+    Max used =      72257 double words  =    0.55 Mbytes
+ 
+ Timing for Function Evaluations:
+ 
+ Statistics for FDEval-Fnc Calls:       117. Time:      0.000 T/C:    0.0000E+00
+ Statistics for FDEval-Drv Calls:       225. Time:      0.000 T/C:    0.0000E+00
+ Statistics for 2DDirLag   Calls:         0. Time:      0.000 T/C:    0.0000E+00
+ Statistics for 2DLagr     Calls:         0. Time:      0.000 T/C:    0.0000E+00
+ 
+=C--- GMO Resort Time 0ms
+=1
+=0IBM ILOG CPLEX   31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=1
+
+IBM ILOG CPLEX   31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=2
+=1
+--- GAMS/Cplex licensed for continuous and discrete problems.
+=2
+=1
+Cplex 12.10.0.0
+
+=2
+ 
+ 
+--------------------------------------------------------------
+CONTROL FILE STATISTICS
+--------------------------------------------------------------
+Rows : 457, columns : 485, nonzeroes : 2482
+Free Rows          : 0
+Iteration limit    : 1999999300
+Resource  limit    : 9.999370e+02
+Objective variable : 285
+Objective sense    : minimize
+Advanced basis     : no
+Binary variables   : 126
+Integer variables  : 9
+SOS1 variables     : 0
+SOS2 variables     : 0
+SemiCont variables : 0
+SemiInt variables  : 0
+OPTCA : 0.000000e+00 , OPTCR : 0.000000e+00
+Priorities         : no
+Cheat              : n.a.
+Cutoff             : n.a.
+Node limit         : 0
+ 
+ 
+
+
+Option Values:
+----------------------------------------------------
+usebasis              0
+cutoff                0
+tryint                0
+domlim                0
+advind                0
+aggcutlim             3
+aggfill               10
+aggind                -1
+auxrootthreads        0
+baralg                0
+barcolnz              0
+barcrossalg           0
+bardisplay            1
+barepcomp             1e-08
+bargrowth             1e+12
+baritlim              2100000000
+barmaxcor             -1
+barobjrng             1e+20
+barorder              0
+barqcpepcomp          1e-07
+barstartalg           1
+bbinterval            7
+bendersfeascuttol     1e-06
+bendersoptcuttol      1e-06
+.benderspartition     0
+benderspartitioninstage 0
+bendersstrategy       0
+bndstrenind           -1
+bqpcuts               0
+brdir                 0
+bttol                 0.9999
+calcqcpduals          1
+cliques               0
+clocktype             2
+clonelog              0
+coeredind             -1
+computeserver        
+covers                0
+cpumask               auto
+craind                1
+crossoveralg          default
+cutlo                 -1e+75
+cutpass               0
+cuts                  0
+cutsfactor            -1
+cutup                 1e+75
+datacheck             0
+depind                -1
+dettilim              1e+75
+disjcuts              0
+divetype              0
+divfltup              1e+299
+divfltlo              -1e+299
+.divflt               0
+dpriind               0
+dtprefix              bnd
+dtterm                1
+dumpcuts              0
+dumptree              0
+dumplp                0
+dynamicrows           -1
+eachcutlim            2100000000
+epagap                0
+epgap                 0
+epint                 1e-05
+eplin                 0.001
+epmrk                 0.01
+epopt                 1e-06
+epper                 1e-06
+eprelax               1e-06
+eprhs                 1e-06
+feasopt               0
+feasoptmode           0
+.feaspref             1
+fixoptfile            
+flowcovers            0
+flowpaths             0
+flushfiles            0
+folding               -1
+fpheur                0
+fraccand              200
+fraccuts              0
+fracpass              0
+freegamsmodel         0
+gubcovers             0
+heuristiceffort       1
+heurfreq              0
+iafile                
+iatriggerfile         
+iatriggertime         60
+iis                   0
+implbd                0
+interactive           0
+intsollim             2100000000
+itlim                 1999999300
+lbheur                0
+liftprojcuts          0
+lpalg                 default
+lpmethod              0
+ltol                  0
+mcfcuts               0
+memoryemphasis        0
+localimplied          0
+mipdisplay            4
+mipemphasis           0
+mipkappastats         -1
+mipinterval           0
+mipordind             1
+mipordtype            0
+mipsearch             0
+mipstart              0
+miptrace              
+miptracenode          100
+miptracetime          1
+miqcpstrat            0
+mircuts               0
+mpslongnum            1
+mtol                  0
+multobj               0
+multobjdisplay        1
+multobjmethod         0
+names                 1
+netdisplay            2
+netepopt              1e-06
+neteprhs              1e-06
+netfind               2
+netitlim              2100000000
+netppriind            0
+nodefileind           1
+nodelim               2100000000
+nodesel               1
+numericalemphasis     0
+objdif                0
+objllim               -1e+75
+objnabstol           
+objnreltol           
+objrng               
+objulim               1e+75
+parallelmode          1
+paramdisplay          1
+perind                0
+perlim                0
+polishtime            0
+polishafterepagap     0
+polishafterepgap      0
+polishafternode       2100000000
+polishafterintsol     2100000000
+polishaftertime       1e+75
+polishafterdettime    1e+75
+populatelim           20
+ppriind               0
+predual               0
+preind                1
+prelinear             1
+prepass               -1
+preslvnd              0
+pricelim              0
+printoptions          0
+probe                 0
+probetime             1e+75
+probedettime          1e+75
+probread              
+qpmakepsdind          1
+qpmethod              0
+qtolin                -1
+quality               0
+rampupdettimelimit    1e+75
+rampupduration        0
+rampuptimelimit       1e+75
+randomseed            0
+readflt               
+readparams            
+record                0
+reduce                3
+reinv                 0
+relaxfixedinfeas      0
+relaxpreind           -1
+relobjdif             0
+repairtries           0
+repeatpresolve        -1
+rerun                 yes
+rhsrng               
+rinsheur              0
+rngrestart            
+rtlcuts               0
+scaind                0
+secret               
+siftalg               0
+siftdisplay           1
+sifting               1
+siftitlim             2100000000
+simdisplay            1
+singlim               10
+solnpool              
+solnpoolmerge         
+solnpoolnumsym        10
+solnpoolagap          1e+75
+solnpoolcapacity      2100000000
+solnpoolgap           1e+75
+solnpoolintensity     0
+solnpoolpop           1
+solnpoolpopdel        
+solnpoolpoprepeat     
+solnpoolprefix        soln
+solnpoolreplace       0
+solutiontype          0
+optimalitytarget      0
+solvefinal            1
+startalg              0
+strongcandlim         10
+strongitlim           0
+subalg                0
+submipnodelim         500
+submipscale           0
+submipstartalg        0
+submipsubalg          0
+symmetry              -1
+threads               1
+tilim                 999.937
+trelim                1e+75
+tuning               
+tuningdisplay         1
+tuningmeasure         1
+tuningrepeat          1
+tuningtilim           199.987
+tuningdettilim        1e+07
+usercutcall           
+usercutfirst          10
+usercutfreq           10
+usercutinterval       100
+usercutmult           2
+usercutnewint         1
+usergdxin             bchin.gdx
+usergdxsol            bchsol.gdx
+usergdxname           bchout.gdx
+usergdxnameinc        bchout_i.gdx
+usergdxprefix         
+userheurcall          
+userheurfirst         10
+userheurfreq          10
+userheurinterval      100
+userheurmult          2
+userheurnewint        1
+userheurobjfirst      0
+userincbcall          
+userincbicall         
+userjobid             
+userkeep              0
+usercgmaxcols         2147483647
+usercgadvind          1
+usercgsolopt          0
+usercgdumplp          bchcgdump.lp
+userpricingcall       
+usersolvenodelp       
+varsel                0
+waitforenter          0
+warninglimit          10
+workdir               D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225q\
+workeralgorithm       0
+workmem               128
+writeannotation       
+writebas              
+writeflt              
+writelp               
+writemps              
+writemst              
+writeord              
+writeparam            
+writepre              
+writeprob             
+writesav              
+zerohalfcuts          0
+----------------------------------------------------
+
+=1
+Unable to load names.
+=2
+Version identifier: 12.10.0.0 | 2019-11-26 | 843d4de2ae
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 1
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_Simplex_Limits_Iterations               1999999300
+CPXPARAM_TimeLimit                               999.93700000000001
+CPXPARAM_Tune_TimeLimit                          199.98740000000001
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+CPXPARAM_WorkDir                                 "D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225q\"
+Tried aggregator 2 times.
+MIP Presolve eliminated 223 rows and 313 columns.
+MIP Presolve modified 456 coefficients.
+Aggregator did 21 substitutions.
+Reduced MIP has 213 rows, 151 columns, and 1002 nonzeros.
+Reduced MIP has 85 binaries, 8 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (1.81 ticks)
+Probing fixed 8 vars, tightened 0 bounds.
+Probing time = 0.00 sec. (0.54 ticks)
+Cover probing fixed 0 vars, tightened 20 bounds.
+Tried aggregator 2 times.
+MIP Presolve eliminated 37 rows and 14 columns.
+MIP Presolve modified 82 coefficients.
+Aggregator did 3 substitutions.
+Reduced MIP has 173 rows, 134 columns, and 898 nonzeros.
+Reduced MIP has 71 binaries, 8 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (1.10 ticks)
+Probing fixed 0 vars, tightened 8 bounds.
+Probing time = 0.00 sec. (0.43 ticks)
+Cover probing fixed 0 vars, tightened 3 bounds.
+Tried aggregator 1 time.
+Detecting symmetries...
+MIP Presolve eliminated 6 rows and 0 columns.
+MIP Presolve modified 61 coefficients.
+Reduced MIP has 167 rows, 134 columns, and 886 nonzeros.
+Reduced MIP has 71 binaries, 8 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.56 ticks)
+Probing time = 0.00 sec. (0.41 ticks)
+Clique table members: 304.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+LP Presolve eliminated 2 rows and 9 columns.
+Aggregator did 4 substitutions.
+Reduced LP has 161 rows, 121 columns, and 865 nonzeros.
+Presolve time = 0.00 sec. (0.16 ticks)
+
+Iteration log . . .
+Iteration:     1   Scaled dual infeas =           200.000000
+Iteration:    17   Dual objective     =          -405.716636
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.00 sec. (0.77 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0      229.1049    18                    229.1049       73         
+      0     0      238.3330    18                    Cuts: 40      114         
+      0     0      269.5959    18                    Cuts: 55      144         
+      0     0      271.3962    18                    Cuts: 35      162         
+      0     0      279.0574    18                    Cuts: 24      189         
+*     0+    0                          504.4408      279.0574            44.68%
+Found incumbent of value 504.440846 after 0.03 sec. (14.28 ticks)
+      0     0      279.2342    18      504.4408       Cuts: 6      192   44.64%
+*     0+    0                          494.9813      279.2342            43.59%
+Found incumbent of value 494.981251 after 0.03 sec. (15.30 ticks)
+Detecting symmetries...
+      0     0      279.5276    18      494.9813       Cuts: 5      197   43.53%
+      0     0      279.5303    18      494.9813      Cuts: 19      201   43.53%
+      0     0      279.6352    18      494.9813   ZeroHalf: 3      209   43.51%
+      0     0      279.8374    18      494.9813      Cuts: 16      213   43.47%
+*     0+    0                          313.0551      279.8374            10.61%
+Found incumbent of value 313.055085 after 0.05 sec. (23.98 ticks)
+*     0+    0                          313.0551      279.8374            10.61%
+Found incumbent of value 313.055085 after 0.05 sec. (25.39 ticks)
+Detecting symmetries...
+      0     2      279.8374    15      313.0551      279.9952      213   10.56%
+Elapsed time = 0.05 sec. (25.89 ticks, tree = 0.01 MB, solutions = 4)
+*    16    14      integral     0      306.5985      281.4215      406    8.21%
+Found incumbent of value 306.598494 after 0.05 sec. (28.76 ticks)
+*    40+   20                          298.0052      284.3730             4.57%
+                                                     Cuts: 12                  
+Found incumbent of value 298.005203 after 0.06 sec. (35.14 ticks)
+*    62    19      integral     0      292.4068      284.6362      770    2.66%
+                                                      Cuts: 5                  
+Found incumbent of value 292.406820 after 0.06 sec. (39.09 ticks)
+*    69    21      integral     0      292.4068      284.7429      807    2.62%
+                                                  ZeroHalf: 1                  
+Found incumbent of value 292.406820 after 0.06 sec. (40.29 ticks)
+
+GUB cover cuts applied:  4
+Clique cuts applied:  14
+Implied bound cuts applied:  12
+Flow cuts applied:  1
+Mixed integer rounding cuts applied:  33
+Zero-half cuts applied:  17
+Gomory fractional cuts applied:  1
+
+Root node processing (before b&c):
+  Real time             =    0.05 sec. (25.92 ticks)
+Sequential b&c:
+  Real time             =    0.03 sec. (21.52 ticks)
+                          ------------
+Total (root+branch&cut) =    0.08 sec. (47.45 ticks)
+=1
+MIP status(101): integer optimal solution
+Cplex Time: 0.08sec (det. 47.45 ticks)
+=2
+=1
+Fixing integer variables, and solving final LP...
+=2
+Version identifier: 12.10.0.0 | 2019-11-26 | 843d4de2ae
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_Simplex_Limits_Iterations               1999999300
+CPXPARAM_TimeLimit                               999.93700000000001
+CPXPARAM_Tune_TimeLimit                          199.98740000000001
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+CPXPARAM_WorkDir                                 "D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225q\"
+Tried aggregator 1 time.
+LP Presolve eliminated 431 rows and 449 columns.
+Aggregator did 1 substitutions.
+Reduced LP has 25 rows, 35 columns, and 87 nonzeros.
+Presolve time = 0.00 sec. (0.31 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Scaled dual infeas =            64.000000
+Iteration:     9   Dual objective     =           287.224943
+=1
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.54 ticks)
+=2
+=1
+Proven optimal solution.
+=2
+=1
+
+MIP Solution:          292.406820    (1069 iterations, 114 nodes)
+=2
+=1
+Final Solve:           292.406820    (13 iterations)
+
+=2
+=1
+Best possible:         292.406820
+=2
+=1
+Absolute gap:            0.000000
+=2
+=1
+Relative gap:            0.000000
+
+=2
+=C--- DICOPT: Setting up next NLP
+=CCONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=0CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=C*** This solver runs with a community license.
+=1
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+=2
+    1  INPUT                                                                  (DEFAULT)
+    2  BRANCH * MAJERR MINERR JACERR                                          (DEFAULT)
+    3  OPTIMIZE                                                               (DEFAULT)
+    4  BRANCH * * * * * * MAJERR                                              (DEFAULT)
+    5  OUTPUT                                                                 (DEFAULT)
+    6  EXIT                                                                   (DEFAULT)
+    7  MAJERR MESSAGE MAJOR ERROR - TERMINATE                                 (DEFAULT)
+    8  EXIT                                                                   (DEFAULT)
+    9  MINERR MESSAGE MINOR ERROR - TERMINATE                                 (DEFAULT)
+   10  EXIT                                                                   (DEFAULT)
+   11  JACERR MESSAGE FUNCTION OR DERIVATIVE ERROR                            (DEFAULT)
+   12  OUTPUT                                                                 (DEFAULT)
+   13  EXIT                                                                   (DEFAULT)
+ 
+  ***  Line    1  INPUT
+ 
+  ***  Line    0  SET       LSAZRW   = TRUE
+ 
+  ***  Line    0  SET       LFEERR   =           0
+ 
+  ***  Line    0  SET       LFITER   =  1000000000
+ 
+  ***  Line    0  SET       RVTIME   =      999.8590000
+ 
+  ***  Line    2  BRANCH with Lbranch =  1
+ 
+  ***  Line    3  OPTIMIZE
+ 
+Search for a first feasible solution
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        1.9616565429E+00 (Input point)
+=1
+ 
+                   Pre-triangular equations:   238
+                   Post-triangular equations:  32
+                   Definitional equations:     30
+ 
+=2
+      1   0        0.0000000000E+00 (After pre-processing)
+      2   0        0.0000000000E+00 (After scaling)
+ 
+ ** Feasible solution. Value of objective =    289.842049557
+ 
+Search for an optimal solution.
+ 
+ 
+   Iter Phase Ninf     Objective     RGmax    NSB   Step InItr MX OK
+      3   3        2.8984204956E+02 0.0E+00     0 0.0E+00    0 F  T
+      4   3        2.8984204956E+02 0.0E+00     0
+=1
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+=2
+ 
+  ***  Line    4  BRANCH with Lbranch =  1
+ 
+  ***  Line    5  OUTPUT
+ 
+  ***  Line    6  EXIT
+=1
+ 
+ CONOPT time Total                            0.001 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+=2
+ 
+ Work length =     169863 double words  =    1.30 Mbytes
+    Estimate =     169863 double words  =    1.30 Mbytes
+    Max used =      72257 double words  =    0.55 Mbytes
+ 
+ Timing for Function Evaluations:
+ 
+ Statistics for FDEval-Fnc Calls:       117. Time:      0.000 T/C:    0.0000E+00
+ Statistics for FDEval-Drv Calls:       225. Time:      0.000 T/C:    0.0000E+00
+ Statistics for 2DDirLag   Calls:         0. Time:      0.000 T/C:    0.0000E+00
+ Statistics for 2DLagr     Calls:         0. Time:      0.000 T/C:    0.0000E+00
+ 
+=1
+=C--- DICOPT: Stopped on NLP worsening
+=C
+=C      The search was stopped because the objective function
+=C      of the NLP subproblems started to deteriorate.
+=C
+=C--- DICOPT: Best integer solution found: 289.842050
+=2
+ DICOPT Log File
+ ------------------------------------------------------------------
+ Major Major     Objective    CPU time  Itera- Evaluation Solver
+ Step  Iter       Function     (Sec)    tions   Errors
+  NLP    1      -314.45733      0.02        7      0      conopt
+  MIP    1       251.28522      0.05      689      0      cplex
+  NLP    2       289.84205<     0.00        4      0      conopt
+  MIP    2       292.40682      0.08     1082      0      cplex
+  NLP    3       289.84205      0.00        4      0      conopt
+ ------------------------------------------------------------------
+   Total solver times :  NLP =     0.02   MIP =     0.13
+   Perc. of total     :  NLP =    11.35   MIP =    88.65
+ ------------------------------------------------------------------

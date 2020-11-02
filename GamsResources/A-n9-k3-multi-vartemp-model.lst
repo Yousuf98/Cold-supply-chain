@@ -1,0 +1,2267 @@
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows - 10/31/20 00:22:10 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  option reslim = 1000;
+GDXIN   D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-input-multi-vartemp.gdx
+  38   
+  39  Set i all locations;
+  40  alias(i,j);
+  41  set subi(i) customers;
+  42  set sub2i(i) starting warehouse and customers;
+  43  set subj(j)  customers;
+  44  set sub2j(j) customers and ending warehouse;
+  45  set k trucks;
+  46  set b products;
+  47   
+--- LOAD  i = 1:i
+--- LOAD  subi = 2:subi
+--- LOAD  sub2i = 3:sub2i
+--- LOAD  subj = 4:subj
+--- LOAD  sub2j = 5:sub2j
+--- LOAD  k = 6:k
+--- LOAD  b = 7:b
+  49   
+  50  scalar N total number of nodes;
+  51  scalar W fixed cost for using a truck: AED per truck;
+  52  scalar Lk maximum load of trck: units;
+  53  scalar M large positive number;
+  54  scalar fm fuel cost for a moving truck: AED per hour;
+  55  scalar fi fuel cost for an idle truck: AED per hpur;
+  56  scalar v average speed of trucks: km per hour;
+  57  scalar z uloading speed: units per hour;
+  58  scalar R penalty rate for being late;
+  59  scalar EXP e;
+  60  scalars maxTemp,minTemp maximum and minimum temperature of trucks;
+  61  scalar maxTempCost refrigeration cost at max temp;
+  62  scalar costPerDegree refrigeration cost for lowering max temp by 1 degree;
+  63   
+--- LOAD  N = 18:N
+--- LOAD  W = 19:W
+--- LOAD  Lk = 20:Lk
+--- LOAD  M = 21:M
+--- LOAD  fm = 22:fm
+--- LOAD  fi = 23:fi
+--- LOAD  v = 24:v
+--- LOAD  z = 25:z
+--- LOAD  R = 26:R
+--- LOAD  EXP = 27:EXP
+--- LOAD  maxTemp = 28:maxTemp
+--- LOAD  minTemp = 29:minTemp
+--- LOAD  maxTempCost = 30:maxTempCost
+--- LOAD  costPerDegree = 31:costPerDegree
+  65   
+  66  parameter S(i,j) distances matrix;
+  67  parameter D(j,b) demand at location j of product b;
+  68  parameter L(j) lower limit of time window at customer j;
+  69  parameter U(j) upper limit of time window at customer j;
+  70  parameter MSL(b) maximum shelf life: days;
+  71  parameter minSL(b) minimum acceptable shelf life;
+  72  parameters alpha(b), beta(b), gamma(b) coef. of door openings..transportation times..temperature;
+  73  parameter P(b) unit price of product b: AED per unit;
+  74   
+--- LOAD  S = 8:S
+--- LOAD  D = 9:D
+--- LOAD  L = 10:L
+--- LOAD  U = 11:U
+--- LOAD  MSL = 12:MSL
+--- LOAD  minSL = 13:minSL
+--- LOAD  alpha = 14:alpha
+--- LOAD  beta = 15:beta
+--- LOAD  gamma = 16:gamma
+--- LOAD  P = 17:P
+  77   
+  78   
+  79  Variables Cost total cost
+  80            tCost cost for using trucks
+  81            dCost cost for distance traveled
+  82            qCost cost for quality lost
+  83            banana     q cost banana
+  84            strawberry q cost strawberry
+  85            broccoli   q cost broccoli
+  86            eCost cost for arriving early
+  87            lCost cost for arriving late;
+  88   
+  89  binary variables X(i,j,k) traveling from i to j using truck k
+  90                   Y(k) using truck k
+  91                   E(j) arriving early at location j
+  92                   Q(j) arriving on time at location j
+  93                   T(j) arriving late at location j;
+  94  positive variable A(j) arrival time at location j;
+  95  integer variables rank(j),rank(i) for subtour constraint;
+  96  integer variable temp(k) temperature of truck k;
+  97  positive variable SL(j,k,b) shelf life of product b at customer j;
+  98   
+  99  positive variable rg(k) refrigeration cost of truck k;
+ 100  positive variable C(i,j,k) cost of traveling from i to j using truck k;
+ 101   
+ 102   
+ 103  Equations OF objective function
+ 104            eq1, eq2, eq3, eq4, eq5 separate cost equations
+ 105            eq6, eq7 refrigeration and fule costs
+ 106            const1 constraint 1: if truck is used set to 1
+ 107            const2 constraint 2: demand of trib is less than max load of truck
+ 108            const3 constraint 3: all customer nodes must be entered once
+ 109            const4 constraint 4: all custmoer nodes must be left once
+ 110            const5 constraint 5: same truck to enter and leave node
+ 111            const6, const7 constraints 6&7: warehouse must be left and entered once per trip
+ 112            const8, const9, const10 constraints 8&9&10: further warehouse movement control
+ 113            const11, const11a constraint 11&11a: subtour elimination constraints
+ 114            const12, const12a constraint 12&12a: arrival time equations
+ 115            const13 constraint 13: arrival time after lower bound
+ 116            const13, const14, const15, const16, const17 constraints 13&14&15&16: setting time variables
+ 117            const18 constraint 18: shlef life calculations
+ 118            const19 constraint 19: minimum requirement for shelf life
+ 119            const20, const21 constraints 20&21: controlling truck temperature;
+ 120   
+ 121  eq1..    tCost =e= sum(k, (W * Y(k)));
+ 122  eq2..    dCost =e= sum((i,j,k), C(i,j,k) * X(i,j,k));
+ 123  eq3..    qCost =e= sum((i,j,k,b), P(b) *(MSL(b) - SL(j,k,b)) * D(j,b)/MSL(b) * X(i,j,k));
+ 124  eq4..    eCost =e= sum(subj(j), fi * (L(j) - A(j)) *  E(j));
+ 125  eq5..    lCost =e= sum(subj(j), R * T(j) * ((sum(b, D(j,b))/z ) + A(j)- U(j)));
+ 126  OF..      Cost =e= tCost + dCost + qCost + eCost + lCost;
+ 127   
+ 128  eq6(k)..     rg(k) =e= maxTempCost + (maxTemp - temp(k)) * costPerDegree;
+ 129  eq7(i,j,k).. C(i,j,k) =e= (fm + rg(k)) * S(i,j)  + (fi + rg(k)) * (sum(b, D(j,b)))/z;
+ 130   
+ 131  const1(k).. sum((subi(i),subj(j)), X(i,j,k)) =l= N * Y(k);
+ 132  const2(k).. sum((sub2i(i),subj(j),b),  D(j,b) * X(i,j,k)) =l= Lk * Y(k);
+ 133  const3(subj(j)).. sum((sub2i(i), k), X(i,j,k)) =e= 1;
+ 134  const4(subi(i)).. sum((sub2j(j), k), X(i,j,k)) =e= 1;
+ 135  const5(subj(j),k).. sum(sub2i(i), X(i,j,k)) =e= sum(sub2j(i), X(j,i,k));
+ 136  const6(k).. sum(subj(j), X('DCS',j,k)) =e= Y(k);
+ 137  const7(k).. sum(subi(i), X(i,'DCE',k)) =e= Y(k);
+ 138  const8.. sum((i,k), X(i,'DCS',k)) =e= 0;
+ 139  const9.. sum((j,k), X('DCE',j,k)) =e= 0;
+ 140  const10.. sum(k, X('DCS','DCE',k)) =e= 0;
+ 141  const11a.. rank('DCS') =e= 0;
+ 142  const11(sub2j(j),sub2i(i),k).. rank(j) =g= rank(i) + N * X(i,j,k) - N + 1;
+ 143   
+ 144  const12a.. A('DCS') =e= 0;
+ 145  const12(sub2j(j),sub2i(i),k).. A(j) =g= A(i) + (sum(b, D(i,b))/z) + (S(i,j)) - (1 - X(i,j,k))* M;
+ 146   
+ 147   
+ 148  const13(j).. A(j) =l= L(j)  +  M*(1- E(j)) ;
+ 149  const14(j).. A(j) =g= U(j)  -  M*(1- T(j)) ;
+ 150  const15(j).. A(j) =g= L(j)  -  M*(1- Q(j)) ;
+ 151  const16(j).. A(j) =l= U(j)  +  M*(1- Q(j)) ;
+ 152  const17(j).. E(j) + Q(j) + T(j) =e= 1;
+ 153   
+ 154  const18(j,k,b).. SL(j,k,b) =e= MSL(b) * (EXP ** (-1* alpha(b) * rank(j)))
+ 155                             * (EXP ** (-1 * beta(b) * A(j)))
+ 156                             * (EXP ** (-1 * gamma(b) * temp(k)));
+ 157   
+ 158  const19(subj(j),k,b).. SL(j,k,b) =g= minSL(b);
+ 159   
+ 160  const20(k).. temp(k)=g= minTemp;
+ 161  const21(k).. temp(k)=l= maxTemp;
+ 162   
+ 163  model simple /all/;
+ 164  solve simple using MINLP minimizing Cost;
+ 165  display x.l, y.l, temp.l, A.l, E.l, T.l, rank.l, SL.l;
+ 166  display Cost.l, tCost.l, dCost.l, qCost.l, eCost.l, lCost.l;
+ 167   
+ 168  execute_unload 'A-n9-k3-input-multi-vartemp.gdx', x Cost A D L U;
+ 182  execute 'gdxxrw A-n9-k3-input-multi-vartemp.gdx output=A-n9-k3-output-multi-vartemp.xlsx @howToWrite.txt';
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows - 10/31/20 00:22:10 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-multi-vartemp-model.gms
+     2       36 CALL           1      36  gdxxrw A-n9-k3-input-multi-vartemp.xlsx @howToRead.txt
+     3       37 GDXIN          1      37  D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-input-multi-vartemp.gdx
+
+
+COMPILATION TIME     =        0.937 SECONDS      3 MB  31.1.1 r4b06116 WEX-WEI
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows - 10/31/20 00:22:10 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE simple Using MINLP From line 164
+
+
+---- OF  =E=  objective function
+
+OF..  Cost - tCost - dCost - qCost - eCost - lCost =E= 0 ; (LHS = 0)
+     
+
+---- eq1  =E=  
+
+eq1..  tCost - 200*Y(03f808cdd997cee9) - 200*Y(551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- eq2  =E=  
+
+eq2..  dCost + (0)*X(DCS,DCS,03f808cdd997cee9) + (0)*X(DCS,DCS,551d181c465cf86f) + (0)*X(DCS,aaa,03f808cdd997cee9) + (0)*X(DCS,aaa,551d181c465cf86f) + (0)*X(DCS,bbb,03f808cdd997cee9) + (0)*X(DCS,bbb,551d181c465cf86f) + (0)*X(DCS,ccc,03f808cdd997cee9)
+     
+      + (0)*X(DCS,ccc,551d181c465cf86f) + (0)*X(DCS,ddd,03f808cdd997cee9) + (0)*X(DCS,ddd,551d181c465cf86f) + (0)*X(DCS,eee,03f808cdd997cee9) + (0)*X(DCS,eee,551d181c465cf86f) + (0)*X(DCS,DCE,03f808cdd997cee9) + (0)*X(DCS,DCE,551d181c465cf86f)
+     
+      + (0)*X(aaa,DCS,03f808cdd997cee9) + (0)*X(aaa,DCS,551d181c465cf86f) + (0)*X(aaa,aaa,03f808cdd997cee9) + (0)*X(aaa,aaa,551d181c465cf86f) + (0)*X(aaa,bbb,03f808cdd997cee9) + (0)*X(aaa,bbb,551d181c465cf86f) + (0)*X(aaa,ccc,03f808cdd997cee9)
+     
+      + (0)*X(aaa,ccc,551d181c465cf86f) + (0)*X(aaa,ddd,03f808cdd997cee9) + (0)*X(aaa,ddd,551d181c465cf86f) + (0)*X(aaa,eee,03f808cdd997cee9) + (0)*X(aaa,eee,551d181c465cf86f) + (0)*X(aaa,DCE,03f808cdd997cee9) + (0)*X(aaa,DCE,551d181c465cf86f)
+     
+      + (0)*X(bbb,DCS,03f808cdd997cee9) + (0)*X(bbb,DCS,551d181c465cf86f) + (0)*X(bbb,aaa,03f808cdd997cee9) + (0)*X(bbb,aaa,551d181c465cf86f) + (0)*X(bbb,bbb,03f808cdd997cee9) + (0)*X(bbb,bbb,551d181c465cf86f) + (0)*X(bbb,ccc,03f808cdd997cee9)
+     
+      + (0)*X(bbb,ccc,551d181c465cf86f) + (0)*X(bbb,ddd,03f808cdd997cee9) + (0)*X(bbb,ddd,551d181c465cf86f) + (0)*X(bbb,eee,03f808cdd997cee9) + (0)*X(bbb,eee,551d181c465cf86f) + (0)*X(bbb,DCE,03f808cdd997cee9) + (0)*X(bbb,DCE,551d181c465cf86f)
+     
+      + (0)*X(ccc,DCS,03f808cdd997cee9) + (0)*X(ccc,DCS,551d181c465cf86f) + (0)*X(ccc,aaa,03f808cdd997cee9) + (0)*X(ccc,aaa,551d181c465cf86f) + (0)*X(ccc,bbb,03f808cdd997cee9) + (0)*X(ccc,bbb,551d181c465cf86f) + (0)*X(ccc,ccc,03f808cdd997cee9)
+     
+      + (0)*X(ccc,ccc,551d181c465cf86f) + (0)*X(ccc,ddd,03f808cdd997cee9) + (0)*X(ccc,ddd,551d181c465cf86f) + (0)*X(ccc,eee,03f808cdd997cee9) + (0)*X(ccc,eee,551d181c465cf86f) + (0)*X(ccc,DCE,03f808cdd997cee9) + (0)*X(ccc,DCE,551d181c465cf86f)
+     
+      + (0)*X(ddd,DCS,03f808cdd997cee9) + (0)*X(ddd,DCS,551d181c465cf86f) + (0)*X(ddd,aaa,03f808cdd997cee9) + (0)*X(ddd,aaa,551d181c465cf86f) + (0)*X(ddd,bbb,03f808cdd997cee9) + (0)*X(ddd,bbb,551d181c465cf86f) + (0)*X(ddd,ccc,03f808cdd997cee9)
+     
+      + (0)*X(ddd,ccc,551d181c465cf86f) + (0)*X(ddd,ddd,03f808cdd997cee9) + (0)*X(ddd,ddd,551d181c465cf86f) + (0)*X(ddd,eee,03f808cdd997cee9) + (0)*X(ddd,eee,551d181c465cf86f) + (0)*X(ddd,DCE,03f808cdd997cee9) + (0)*X(ddd,DCE,551d181c465cf86f)
+     
+      + (0)*X(eee,DCS,03f808cdd997cee9) + (0)*X(eee,DCS,551d181c465cf86f) + (0)*X(eee,aaa,03f808cdd997cee9) + (0)*X(eee,aaa,551d181c465cf86f) + (0)*X(eee,bbb,03f808cdd997cee9) + (0)*X(eee,bbb,551d181c465cf86f) + (0)*X(eee,ccc,03f808cdd997cee9)
+     
+      + (0)*X(eee,ccc,551d181c465cf86f) + (0)*X(eee,ddd,03f808cdd997cee9) + (0)*X(eee,ddd,551d181c465cf86f) + (0)*X(eee,eee,03f808cdd997cee9) + (0)*X(eee,eee,551d181c465cf86f) + (0)*X(eee,DCE,03f808cdd997cee9) + (0)*X(eee,DCE,551d181c465cf86f)
+     
+      + (0)*X(DCE,DCS,03f808cdd997cee9) + (0)*X(DCE,DCS,551d181c465cf86f) + (0)*X(DCE,aaa,03f808cdd997cee9) + (0)*X(DCE,aaa,551d181c465cf86f) + (0)*X(DCE,bbb,03f808cdd997cee9) + (0)*X(DCE,bbb,551d181c465cf86f) + (0)*X(DCE,ccc,03f808cdd997cee9)
+     
+      + (0)*X(DCE,ccc,551d181c465cf86f) + (0)*X(DCE,ddd,03f808cdd997cee9) + (0)*X(DCE,ddd,551d181c465cf86f) + (0)*X(DCE,eee,03f808cdd997cee9) + (0)*X(DCE,eee,551d181c465cf86f) + (0)*X(DCE,DCE,03f808cdd997cee9) + (0)*X(DCE,DCE,551d181c465cf86f)
+     
+      + (0)*C(DCS,DCS,03f808cdd997cee9) + (0)*C(DCS,DCS,551d181c465cf86f) + (0)*C(DCS,aaa,03f808cdd997cee9) + (0)*C(DCS,aaa,551d181c465cf86f) + (0)*C(DCS,bbb,03f808cdd997cee9) + (0)*C(DCS,bbb,551d181c465cf86f) + (0)*C(DCS,ccc,03f808cdd997cee9)
+     
+      + (0)*C(DCS,ccc,551d181c465cf86f) + (0)*C(DCS,ddd,03f808cdd997cee9) + (0)*C(DCS,ddd,551d181c465cf86f) + (0)*C(DCS,eee,03f808cdd997cee9) + (0)*C(DCS,eee,551d181c465cf86f) + (0)*C(DCS,DCE,03f808cdd997cee9) + (0)*C(DCS,DCE,551d181c465cf86f)
+     
+      + (0)*C(aaa,DCS,03f808cdd997cee9) + (0)*C(aaa,DCS,551d181c465cf86f) + (0)*C(aaa,aaa,03f808cdd997cee9) + (0)*C(aaa,aaa,551d181c465cf86f) + (0)*C(aaa,bbb,03f808cdd997cee9) + (0)*C(aaa,bbb,551d181c465cf86f) + (0)*C(aaa,ccc,03f808cdd997cee9)
+     
+      + (0)*C(aaa,ccc,551d181c465cf86f) + (0)*C(aaa,ddd,03f808cdd997cee9) + (0)*C(aaa,ddd,551d181c465cf86f) + (0)*C(aaa,eee,03f808cdd997cee9) + (0)*C(aaa,eee,551d181c465cf86f) + (0)*C(aaa,DCE,03f808cdd997cee9) + (0)*C(aaa,DCE,551d181c465cf86f)
+     
+      + (0)*C(bbb,DCS,03f808cdd997cee9) + (0)*C(bbb,DCS,551d181c465cf86f) + (0)*C(bbb,aaa,03f808cdd997cee9) + (0)*C(bbb,aaa,551d181c465cf86f) + (0)*C(bbb,bbb,03f808cdd997cee9) + (0)*C(bbb,bbb,551d181c465cf86f) + (0)*C(bbb,ccc,03f808cdd997cee9)
+     
+      + (0)*C(bbb,ccc,551d181c465cf86f) + (0)*C(bbb,ddd,03f808cdd997cee9) + (0)*C(bbb,ddd,551d181c465cf86f) + (0)*C(bbb,eee,03f808cdd997cee9) + (0)*C(bbb,eee,551d181c465cf86f) + (0)*C(bbb,DCE,03f808cdd997cee9) + (0)*C(bbb,DCE,551d181c465cf86f)
+     
+      + (0)*C(ccc,DCS,03f808cdd997cee9) + (0)*C(ccc,DCS,551d181c465cf86f) + (0)*C(ccc,aaa,03f808cdd997cee9) + (0)*C(ccc,aaa,551d181c465cf86f) + (0)*C(ccc,bbb,03f808cdd997cee9) + (0)*C(ccc,bbb,551d181c465cf86f) + (0)*C(ccc,ccc,03f808cdd997cee9)
+     
+      + (0)*C(ccc,ccc,551d181c465cf86f) + (0)*C(ccc,ddd,03f808cdd997cee9) + (0)*C(ccc,ddd,551d181c465cf86f) + (0)*C(ccc,eee,03f808cdd997cee9) + (0)*C(ccc,eee,551d181c465cf86f) + (0)*C(ccc,DCE,03f808cdd997cee9) + (0)*C(ccc,DCE,551d181c465cf86f)
+     
+      + (0)*C(ddd,DCS,03f808cdd997cee9) + (0)*C(ddd,DCS,551d181c465cf86f) + (0)*C(ddd,aaa,03f808cdd997cee9) + (0)*C(ddd,aaa,551d181c465cf86f) + (0)*C(ddd,bbb,03f808cdd997cee9) + (0)*C(ddd,bbb,551d181c465cf86f) + (0)*C(ddd,ccc,03f808cdd997cee9)
+     
+      + (0)*C(ddd,ccc,551d181c465cf86f) + (0)*C(ddd,ddd,03f808cdd997cee9) + (0)*C(ddd,ddd,551d181c465cf86f) + (0)*C(ddd,eee,03f808cdd997cee9) + (0)*C(ddd,eee,551d181c465cf86f) + (0)*C(ddd,DCE,03f808cdd997cee9) + (0)*C(ddd,DCE,551d181c465cf86f)
+     
+      + (0)*C(eee,DCS,03f808cdd997cee9) + (0)*C(eee,DCS,551d181c465cf86f) + (0)*C(eee,aaa,03f808cdd997cee9) + (0)*C(eee,aaa,551d181c465cf86f) + (0)*C(eee,bbb,03f808cdd997cee9) + (0)*C(eee,bbb,551d181c465cf86f) + (0)*C(eee,ccc,03f808cdd997cee9)
+     
+      + (0)*C(eee,ccc,551d181c465cf86f) + (0)*C(eee,ddd,03f808cdd997cee9) + (0)*C(eee,ddd,551d181c465cf86f) + (0)*C(eee,eee,03f808cdd997cee9) + (0)*C(eee,eee,551d181c465cf86f) + (0)*C(eee,DCE,03f808cdd997cee9) + (0)*C(eee,DCE,551d181c465cf86f)
+     
+      + (0)*C(DCE,DCS,03f808cdd997cee9) + (0)*C(DCE,DCS,551d181c465cf86f) + (0)*C(DCE,aaa,03f808cdd997cee9) + (0)*C(DCE,aaa,551d181c465cf86f) + (0)*C(DCE,bbb,03f808cdd997cee9) + (0)*C(DCE,bbb,551d181c465cf86f) + (0)*C(DCE,ccc,03f808cdd997cee9)
+     
+      + (0)*C(DCE,ccc,551d181c465cf86f) + (0)*C(DCE,ddd,03f808cdd997cee9) + (0)*C(DCE,ddd,551d181c465cf86f) + (0)*C(DCE,eee,03f808cdd997cee9) + (0)*C(DCE,eee,551d181c465cf86f) + (0)*C(DCE,DCE,03f808cdd997cee9) + (0)*C(DCE,DCE,551d181c465cf86f) =E= 0 ;
+     
+      (LHS = 0)
+     
+
+---- eq3  =E=  
+
+eq3..  qCost - (60)*X(DCS,aaa,03f808cdd997cee9) - (60)*X(DCS,aaa,551d181c465cf86f) - (120)*X(DCS,bbb,03f808cdd997cee9) - (120)*X(DCS,bbb,551d181c465cf86f) - (15)*X(DCS,ccc,03f808cdd997cee9) - (15)*X(DCS,ccc,551d181c465cf86f)
+     
+      - (150)*X(DCS,ddd,03f808cdd997cee9) - (150)*X(DCS,ddd,551d181c465cf86f) - (10)*X(DCS,eee,03f808cdd997cee9) - (10)*X(DCS,eee,551d181c465cf86f) - (60)*X(aaa,aaa,03f808cdd997cee9) - (60)*X(aaa,aaa,551d181c465cf86f) - (120)*X(aaa,bbb,03f808cdd997cee9)
+     
+      - (120)*X(aaa,bbb,551d181c465cf86f) - (15)*X(aaa,ccc,03f808cdd997cee9) - (15)*X(aaa,ccc,551d181c465cf86f) - (150)*X(aaa,ddd,03f808cdd997cee9) - (150)*X(aaa,ddd,551d181c465cf86f) - (10)*X(aaa,eee,03f808cdd997cee9) - (10)*X(aaa,eee,551d181c465cf86f)
+     
+      - (60)*X(bbb,aaa,03f808cdd997cee9) - (60)*X(bbb,aaa,551d181c465cf86f) - (120)*X(bbb,bbb,03f808cdd997cee9) - (120)*X(bbb,bbb,551d181c465cf86f) - (15)*X(bbb,ccc,03f808cdd997cee9) - (15)*X(bbb,ccc,551d181c465cf86f) - (150)*X(bbb,ddd,03f808cdd997cee9)
+     
+      - (150)*X(bbb,ddd,551d181c465cf86f) - (10)*X(bbb,eee,03f808cdd997cee9) - (10)*X(bbb,eee,551d181c465cf86f) - (60)*X(ccc,aaa,03f808cdd997cee9) - (60)*X(ccc,aaa,551d181c465cf86f) - (120)*X(ccc,bbb,03f808cdd997cee9) - (120)*X(ccc,bbb,551d181c465cf86f)
+     
+      - (15)*X(ccc,ccc,03f808cdd997cee9) - (15)*X(ccc,ccc,551d181c465cf86f) - (150)*X(ccc,ddd,03f808cdd997cee9) - (150)*X(ccc,ddd,551d181c465cf86f) - (10)*X(ccc,eee,03f808cdd997cee9) - (10)*X(ccc,eee,551d181c465cf86f) - (60)*X(ddd,aaa,03f808cdd997cee9)
+     
+      - (60)*X(ddd,aaa,551d181c465cf86f) - (120)*X(ddd,bbb,03f808cdd997cee9) - (120)*X(ddd,bbb,551d181c465cf86f) - (15)*X(ddd,ccc,03f808cdd997cee9) - (15)*X(ddd,ccc,551d181c465cf86f) - (150)*X(ddd,ddd,03f808cdd997cee9) - (150)*X(ddd,ddd,551d181c465cf86f)
+     
+      - (10)*X(ddd,eee,03f808cdd997cee9) - (10)*X(ddd,eee,551d181c465cf86f) - (60)*X(eee,aaa,03f808cdd997cee9) - (60)*X(eee,aaa,551d181c465cf86f) - (120)*X(eee,bbb,03f808cdd997cee9) - (120)*X(eee,bbb,551d181c465cf86f) - (15)*X(eee,ccc,03f808cdd997cee9)
+     
+      - (15)*X(eee,ccc,551d181c465cf86f) - (150)*X(eee,ddd,03f808cdd997cee9) - (150)*X(eee,ddd,551d181c465cf86f) - (10)*X(eee,eee,03f808cdd997cee9) - (10)*X(eee,eee,551d181c465cf86f) - (60)*X(DCE,aaa,03f808cdd997cee9) - (60)*X(DCE,aaa,551d181c465cf86f)
+     
+      - (120)*X(DCE,bbb,03f808cdd997cee9) - (120)*X(DCE,bbb,551d181c465cf86f) - (15)*X(DCE,ccc,03f808cdd997cee9) - (15)*X(DCE,ccc,551d181c465cf86f) - (150)*X(DCE,ddd,03f808cdd997cee9) - (150)*X(DCE,ddd,551d181c465cf86f) - (10)*X(DCE,eee,03f808cdd997cee9)
+     
+      - (10)*X(DCE,eee,551d181c465cf86f) + (0)*SL(aaa,03f808cdd997cee9,Banana) + (0)*SL(aaa,03f808cdd997cee9,Broccoli) + (0)*SL(aaa,551d181c465cf86f,Banana) + (0)*SL(aaa,551d181c465cf86f,Broccoli) + (0)*SL(bbb,03f808cdd997cee9,Strawberry)
+     
+      + (0)*SL(bbb,551d181c465cf86f,Strawberry) + (0)*SL(ccc,03f808cdd997cee9,Broccoli) + (0)*SL(ccc,551d181c465cf86f,Broccoli) + (0)*SL(ddd,03f808cdd997cee9,Banana) + (0)*SL(ddd,03f808cdd997cee9,Strawberry) + (0)*SL(ddd,551d181c465cf86f,Banana)
+     
+      + (0)*SL(ddd,551d181c465cf86f,Strawberry) + (0)*SL(eee,03f808cdd997cee9,Broccoli) + (0)*SL(eee,551d181c465cf86f,Broccoli) =E= 0 ; (LHS = 0)
+     
+
+---- eq4  =E=  
+
+eq4..  eCost + (0)*E(aaa) + (0)*E(bbb) + (0)*E(ccc) + (0)*E(ddd) + (0)*E(eee) + (0)*A(aaa) + (0)*A(bbb) + (0)*A(ccc) + (0)*A(ddd) + (0)*A(eee) =E= 0 ; (LHS = 0)
+     
+
+---- eq5  =E=  separate cost equations
+
+eq5..  lCost + (117)*T(aaa) + (119)*T(bbb) + (118.5)*T(ccc) + (118)*T(ddd) + (119)*T(eee) + (0)*A(aaa) + (0)*A(bbb) + (0)*A(ccc) + (0)*A(ddd) + (0)*A(eee) =E= 0 ; (LHS = 0)
+     
+
+---- eq6  =E=  
+
+eq6(03f808cdd997cee9)..  temp(03f808cdd997cee9) + rg(03f808cdd997cee9) =E= 14 ; (LHS = 0, INFES = 14 ****)
+     
+eq6(551d181c465cf86f)..  temp(551d181c465cf86f) + rg(551d181c465cf86f) =E= 14 ; (LHS = 0, INFES = 14 ****)
+     
+
+---- eq7  =E=  refrigeration and fule costs
+
+eq7(DCS,DCS,03f808cdd997cee9)..  C(DCS,DCS,03f808cdd997cee9) =E= 0 ; (LHS = 0)
+     
+eq7(DCS,DCS,551d181c465cf86f)..  C(DCS,DCS,551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+eq7(DCS,aaa,03f808cdd997cee9)..  - 0.303055556*rg(03f808cdd997cee9) + C(DCS,aaa,03f808cdd997cee9) =E= 8.035277812 ; (LHS = 0, INFES = 8.035277812 ****)
+     
+REMAINING 95 ENTRIES SKIPPED
+
+
+---- const1  =L=  constraint 1: if truck is used set to 1
+
+const1(03f808cdd997cee9)..  X(aaa,aaa,03f808cdd997cee9) + X(aaa,bbb,03f808cdd997cee9) + X(aaa,ccc,03f808cdd997cee9) + X(aaa,ddd,03f808cdd997cee9) + X(aaa,eee,03f808cdd997cee9) + X(bbb,aaa,03f808cdd997cee9) + X(bbb,bbb,03f808cdd997cee9)
+     
+      + X(bbb,ccc,03f808cdd997cee9) + X(bbb,ddd,03f808cdd997cee9) + X(bbb,eee,03f808cdd997cee9) + X(ccc,aaa,03f808cdd997cee9) + X(ccc,bbb,03f808cdd997cee9) + X(ccc,ccc,03f808cdd997cee9) + X(ccc,ddd,03f808cdd997cee9) + X(ccc,eee,03f808cdd997cee9)
+     
+      + X(ddd,aaa,03f808cdd997cee9) + X(ddd,bbb,03f808cdd997cee9) + X(ddd,ccc,03f808cdd997cee9) + X(ddd,ddd,03f808cdd997cee9) + X(ddd,eee,03f808cdd997cee9) + X(eee,aaa,03f808cdd997cee9) + X(eee,bbb,03f808cdd997cee9) + X(eee,ccc,03f808cdd997cee9)
+     
+      + X(eee,ddd,03f808cdd997cee9) + X(eee,eee,03f808cdd997cee9) - 6*Y(03f808cdd997cee9) =L= 0 ; (LHS = 0)
+     
+const1(551d181c465cf86f)..  X(aaa,aaa,551d181c465cf86f) + X(aaa,bbb,551d181c465cf86f) + X(aaa,ccc,551d181c465cf86f) + X(aaa,ddd,551d181c465cf86f) + X(aaa,eee,551d181c465cf86f) + X(bbb,aaa,551d181c465cf86f) + X(bbb,bbb,551d181c465cf86f)
+     
+      + X(bbb,ccc,551d181c465cf86f) + X(bbb,ddd,551d181c465cf86f) + X(bbb,eee,551d181c465cf86f) + X(ccc,aaa,551d181c465cf86f) + X(ccc,bbb,551d181c465cf86f) + X(ccc,ccc,551d181c465cf86f) + X(ccc,ddd,551d181c465cf86f) + X(ccc,eee,551d181c465cf86f)
+     
+      + X(ddd,aaa,551d181c465cf86f) + X(ddd,bbb,551d181c465cf86f) + X(ddd,ccc,551d181c465cf86f) + X(ddd,ddd,551d181c465cf86f) + X(ddd,eee,551d181c465cf86f) + X(eee,aaa,551d181c465cf86f) + X(eee,bbb,551d181c465cf86f) + X(eee,ccc,551d181c465cf86f)
+     
+      + X(eee,ddd,551d181c465cf86f) + X(eee,eee,551d181c465cf86f) - 6*Y(551d181c465cf86f) =L= 0 ; (LHS = 0)
+     
+
+---- const2  =L=  constraint 2: demand of trib is less than max load of truck
+
+const2(03f808cdd997cee9)..  6*X(DCS,aaa,03f808cdd997cee9) + 2*X(DCS,bbb,03f808cdd997cee9) + 3*X(DCS,ccc,03f808cdd997cee9) + 4*X(DCS,ddd,03f808cdd997cee9) + 2*X(DCS,eee,03f808cdd997cee9) + 6*X(aaa,aaa,03f808cdd997cee9) + 2*X(aaa,bbb,03f808cdd997cee9)
+     
+      + 3*X(aaa,ccc,03f808cdd997cee9) + 4*X(aaa,ddd,03f808cdd997cee9) + 2*X(aaa,eee,03f808cdd997cee9) + 6*X(bbb,aaa,03f808cdd997cee9) + 2*X(bbb,bbb,03f808cdd997cee9) + 3*X(bbb,ccc,03f808cdd997cee9) + 4*X(bbb,ddd,03f808cdd997cee9)
+     
+      + 2*X(bbb,eee,03f808cdd997cee9) + 6*X(ccc,aaa,03f808cdd997cee9) + 2*X(ccc,bbb,03f808cdd997cee9) + 3*X(ccc,ccc,03f808cdd997cee9) + 4*X(ccc,ddd,03f808cdd997cee9) + 2*X(ccc,eee,03f808cdd997cee9) + 6*X(ddd,aaa,03f808cdd997cee9)
+     
+      + 2*X(ddd,bbb,03f808cdd997cee9) + 3*X(ddd,ccc,03f808cdd997cee9) + 4*X(ddd,ddd,03f808cdd997cee9) + 2*X(ddd,eee,03f808cdd997cee9) + 6*X(eee,aaa,03f808cdd997cee9) + 2*X(eee,bbb,03f808cdd997cee9) + 3*X(eee,ccc,03f808cdd997cee9)
+     
+      + 4*X(eee,ddd,03f808cdd997cee9) + 2*X(eee,eee,03f808cdd997cee9) - 10*Y(03f808cdd997cee9) =L= 0 ; (LHS = 0)
+     
+const2(551d181c465cf86f)..  6*X(DCS,aaa,551d181c465cf86f) + 2*X(DCS,bbb,551d181c465cf86f) + 3*X(DCS,ccc,551d181c465cf86f) + 4*X(DCS,ddd,551d181c465cf86f) + 2*X(DCS,eee,551d181c465cf86f) + 6*X(aaa,aaa,551d181c465cf86f) + 2*X(aaa,bbb,551d181c465cf86f)
+     
+      + 3*X(aaa,ccc,551d181c465cf86f) + 4*X(aaa,ddd,551d181c465cf86f) + 2*X(aaa,eee,551d181c465cf86f) + 6*X(bbb,aaa,551d181c465cf86f) + 2*X(bbb,bbb,551d181c465cf86f) + 3*X(bbb,ccc,551d181c465cf86f) + 4*X(bbb,ddd,551d181c465cf86f)
+     
+      + 2*X(bbb,eee,551d181c465cf86f) + 6*X(ccc,aaa,551d181c465cf86f) + 2*X(ccc,bbb,551d181c465cf86f) + 3*X(ccc,ccc,551d181c465cf86f) + 4*X(ccc,ddd,551d181c465cf86f) + 2*X(ccc,eee,551d181c465cf86f) + 6*X(ddd,aaa,551d181c465cf86f)
+     
+      + 2*X(ddd,bbb,551d181c465cf86f) + 3*X(ddd,ccc,551d181c465cf86f) + 4*X(ddd,ddd,551d181c465cf86f) + 2*X(ddd,eee,551d181c465cf86f) + 6*X(eee,aaa,551d181c465cf86f) + 2*X(eee,bbb,551d181c465cf86f) + 3*X(eee,ccc,551d181c465cf86f)
+     
+      + 4*X(eee,ddd,551d181c465cf86f) + 2*X(eee,eee,551d181c465cf86f) - 10*Y(551d181c465cf86f) =L= 0 ; (LHS = 0)
+     
+
+---- const3  =E=  constraint 3: all customer nodes must be entered once
+
+const3(aaa)..  X(DCS,aaa,03f808cdd997cee9) + X(DCS,aaa,551d181c465cf86f) + X(aaa,aaa,03f808cdd997cee9) + X(aaa,aaa,551d181c465cf86f) + X(bbb,aaa,03f808cdd997cee9) + X(bbb,aaa,551d181c465cf86f) + X(ccc,aaa,03f808cdd997cee9) + X(ccc,aaa,551d181c465cf86f)
+     
+      + X(ddd,aaa,03f808cdd997cee9) + X(ddd,aaa,551d181c465cf86f) + X(eee,aaa,03f808cdd997cee9) + X(eee,aaa,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+const3(bbb)..  X(DCS,bbb,03f808cdd997cee9) + X(DCS,bbb,551d181c465cf86f) + X(aaa,bbb,03f808cdd997cee9) + X(aaa,bbb,551d181c465cf86f) + X(bbb,bbb,03f808cdd997cee9) + X(bbb,bbb,551d181c465cf86f) + X(ccc,bbb,03f808cdd997cee9) + X(ccc,bbb,551d181c465cf86f)
+     
+      + X(ddd,bbb,03f808cdd997cee9) + X(ddd,bbb,551d181c465cf86f) + X(eee,bbb,03f808cdd997cee9) + X(eee,bbb,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+const3(ccc)..  X(DCS,ccc,03f808cdd997cee9) + X(DCS,ccc,551d181c465cf86f) + X(aaa,ccc,03f808cdd997cee9) + X(aaa,ccc,551d181c465cf86f) + X(bbb,ccc,03f808cdd997cee9) + X(bbb,ccc,551d181c465cf86f) + X(ccc,ccc,03f808cdd997cee9) + X(ccc,ccc,551d181c465cf86f)
+     
+      + X(ddd,ccc,03f808cdd997cee9) + X(ddd,ccc,551d181c465cf86f) + X(eee,ccc,03f808cdd997cee9) + X(eee,ccc,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+
+---- const4  =E=  constraint 4: all custmoer nodes must be left once
+
+const4(aaa)..  X(aaa,aaa,03f808cdd997cee9) + X(aaa,aaa,551d181c465cf86f) + X(aaa,bbb,03f808cdd997cee9) + X(aaa,bbb,551d181c465cf86f) + X(aaa,ccc,03f808cdd997cee9) + X(aaa,ccc,551d181c465cf86f) + X(aaa,ddd,03f808cdd997cee9) + X(aaa,ddd,551d181c465cf86f)
+     
+      + X(aaa,eee,03f808cdd997cee9) + X(aaa,eee,551d181c465cf86f) + X(aaa,DCE,03f808cdd997cee9) + X(aaa,DCE,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+const4(bbb)..  X(bbb,aaa,03f808cdd997cee9) + X(bbb,aaa,551d181c465cf86f) + X(bbb,bbb,03f808cdd997cee9) + X(bbb,bbb,551d181c465cf86f) + X(bbb,ccc,03f808cdd997cee9) + X(bbb,ccc,551d181c465cf86f) + X(bbb,ddd,03f808cdd997cee9) + X(bbb,ddd,551d181c465cf86f)
+     
+      + X(bbb,eee,03f808cdd997cee9) + X(bbb,eee,551d181c465cf86f) + X(bbb,DCE,03f808cdd997cee9) + X(bbb,DCE,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+const4(ccc)..  X(ccc,aaa,03f808cdd997cee9) + X(ccc,aaa,551d181c465cf86f) + X(ccc,bbb,03f808cdd997cee9) + X(ccc,bbb,551d181c465cf86f) + X(ccc,ccc,03f808cdd997cee9) + X(ccc,ccc,551d181c465cf86f) + X(ccc,ddd,03f808cdd997cee9) + X(ccc,ddd,551d181c465cf86f)
+     
+      + X(ccc,eee,03f808cdd997cee9) + X(ccc,eee,551d181c465cf86f) + X(ccc,DCE,03f808cdd997cee9) + X(ccc,DCE,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+
+---- const5  =E=  constraint 5: same truck to enter and leave node
+
+const5(aaa,03f808cdd997cee9)..  X(DCS,aaa,03f808cdd997cee9) - X(aaa,bbb,03f808cdd997cee9) - X(aaa,ccc,03f808cdd997cee9) - X(aaa,ddd,03f808cdd997cee9) - X(aaa,eee,03f808cdd997cee9) - X(aaa,DCE,03f808cdd997cee9) + X(bbb,aaa,03f808cdd997cee9)
+     
+      + X(ccc,aaa,03f808cdd997cee9) + X(ddd,aaa,03f808cdd997cee9) + X(eee,aaa,03f808cdd997cee9) =E= 0 ; (LHS = 0)
+     
+const5(aaa,551d181c465cf86f)..  X(DCS,aaa,551d181c465cf86f) - X(aaa,bbb,551d181c465cf86f) - X(aaa,ccc,551d181c465cf86f) - X(aaa,ddd,551d181c465cf86f) - X(aaa,eee,551d181c465cf86f) - X(aaa,DCE,551d181c465cf86f) + X(bbb,aaa,551d181c465cf86f)
+     
+      + X(ccc,aaa,551d181c465cf86f) + X(ddd,aaa,551d181c465cf86f) + X(eee,aaa,551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+const5(bbb,03f808cdd997cee9)..  X(DCS,bbb,03f808cdd997cee9) + X(aaa,bbb,03f808cdd997cee9) - X(bbb,aaa,03f808cdd997cee9) - X(bbb,ccc,03f808cdd997cee9) - X(bbb,ddd,03f808cdd997cee9) - X(bbb,eee,03f808cdd997cee9) - X(bbb,DCE,03f808cdd997cee9)
+     
+      + X(ccc,bbb,03f808cdd997cee9) + X(ddd,bbb,03f808cdd997cee9) + X(eee,bbb,03f808cdd997cee9) =E= 0 ; (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- const6  =E=  
+
+const6(03f808cdd997cee9)..  X(DCS,aaa,03f808cdd997cee9) + X(DCS,bbb,03f808cdd997cee9) + X(DCS,ccc,03f808cdd997cee9) + X(DCS,ddd,03f808cdd997cee9) + X(DCS,eee,03f808cdd997cee9) - Y(03f808cdd997cee9) =E= 0 ; (LHS = 0)
+     
+const6(551d181c465cf86f)..  X(DCS,aaa,551d181c465cf86f) + X(DCS,bbb,551d181c465cf86f) + X(DCS,ccc,551d181c465cf86f) + X(DCS,ddd,551d181c465cf86f) + X(DCS,eee,551d181c465cf86f) - Y(551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- const7  =E=  constraints 6&7: warehouse must be left and entered once per trip
+
+const7(03f808cdd997cee9)..  X(aaa,DCE,03f808cdd997cee9) + X(bbb,DCE,03f808cdd997cee9) + X(ccc,DCE,03f808cdd997cee9) + X(ddd,DCE,03f808cdd997cee9) + X(eee,DCE,03f808cdd997cee9) - Y(03f808cdd997cee9) =E= 0 ; (LHS = 0)
+     
+const7(551d181c465cf86f)..  X(aaa,DCE,551d181c465cf86f) + X(bbb,DCE,551d181c465cf86f) + X(ccc,DCE,551d181c465cf86f) + X(ddd,DCE,551d181c465cf86f) + X(eee,DCE,551d181c465cf86f) - Y(551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- const8  =E=  
+
+const8..  X(DCS,DCS,03f808cdd997cee9) + X(DCS,DCS,551d181c465cf86f) + X(aaa,DCS,03f808cdd997cee9) + X(aaa,DCS,551d181c465cf86f) + X(bbb,DCS,03f808cdd997cee9) + X(bbb,DCS,551d181c465cf86f) + X(ccc,DCS,03f808cdd997cee9) + X(ccc,DCS,551d181c465cf86f)
+     
+      + X(ddd,DCS,03f808cdd997cee9) + X(ddd,DCS,551d181c465cf86f) + X(eee,DCS,03f808cdd997cee9) + X(eee,DCS,551d181c465cf86f) + X(DCE,DCS,03f808cdd997cee9) + X(DCE,DCS,551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- const9  =E=  
+
+const9..  X(DCE,DCS,03f808cdd997cee9) + X(DCE,DCS,551d181c465cf86f) + X(DCE,aaa,03f808cdd997cee9) + X(DCE,aaa,551d181c465cf86f) + X(DCE,bbb,03f808cdd997cee9) + X(DCE,bbb,551d181c465cf86f) + X(DCE,ccc,03f808cdd997cee9) + X(DCE,ccc,551d181c465cf86f)
+     
+      + X(DCE,ddd,03f808cdd997cee9) + X(DCE,ddd,551d181c465cf86f) + X(DCE,eee,03f808cdd997cee9) + X(DCE,eee,551d181c465cf86f) + X(DCE,DCE,03f808cdd997cee9) + X(DCE,DCE,551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- const10  =E=  constraints 8&9&10: further warehouse movement control
+
+const10..  X(DCS,DCE,03f808cdd997cee9) + X(DCS,DCE,551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- const11  =G=  
+
+const11(aaa,DCS,03f808cdd997cee9)..  - 6*X(DCS,aaa,03f808cdd997cee9) - rank(DCS) + rank(aaa) =G= -5 ; (LHS = 0)
+     
+const11(aaa,DCS,551d181c465cf86f)..  - 6*X(DCS,aaa,551d181c465cf86f) - rank(DCS) + rank(aaa) =G= -5 ; (LHS = 0)
+     
+const11(aaa,aaa,03f808cdd997cee9)..  - 6*X(aaa,aaa,03f808cdd997cee9) =G= -5 ; (LHS = 0)
+     
+REMAINING 69 ENTRIES SKIPPED
+
+
+---- const11a  =E=  constraint 11&11a: subtour elimination constraints
+
+const11a..  rank(DCS) =E= 0 ; (LHS = 0)
+     
+
+---- const12  =G=  
+
+const12(aaa,DCS,03f808cdd997cee9)..  - 100*X(DCS,aaa,03f808cdd997cee9) - A(DCS) + A(aaa) =G= -99.996944444 ; (LHS = 0)
+     
+const12(aaa,DCS,551d181c465cf86f)..  - 100*X(DCS,aaa,551d181c465cf86f) - A(DCS) + A(aaa) =G= -99.996944444 ; (LHS = 0)
+     
+const12(aaa,aaa,03f808cdd997cee9)..  - 100*X(aaa,aaa,03f808cdd997cee9) =G= -99.7 ; (LHS = 0)
+     
+REMAINING 69 ENTRIES SKIPPED
+
+
+---- const12a  =E=  constraint 12&12a: arrival time equations
+
+const12a..  A(DCS) =E= 0 ; (LHS = 0)
+     
+
+---- const13  =L=  constraint 13: arrival time after lower bound
+
+const13(DCS)..  100*E(DCS) + A(DCS) =L= 100 ; (LHS = 0)
+     
+const13(aaa)..  100*E(aaa) + A(aaa) =L= 100 ; (LHS = 0)
+     
+const13(bbb)..  100*E(bbb) + A(bbb) =L= 100 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- const14  =G=  
+
+const14(DCS)..  - 100*T(DCS) + A(DCS) =G= -100 ; (LHS = 0)
+     
+const14(aaa)..  - 100*T(aaa) + A(aaa) =G= -88 ; (LHS = 0)
+     
+const14(bbb)..  - 100*T(bbb) + A(bbb) =G= -88 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- const15  =G=  
+
+const15(DCS)..  - 100*Q(DCS) + A(DCS) =G= -100 ; (LHS = 0)
+     
+const15(aaa)..  - 100*Q(aaa) + A(aaa) =G= -100 ; (LHS = 0)
+     
+const15(bbb)..  - 100*Q(bbb) + A(bbb) =G= -100 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- const16  =L=  
+
+const16(DCS)..  100*Q(DCS) + A(DCS) =L= 100 ; (LHS = 0)
+     
+const16(aaa)..  100*Q(aaa) + A(aaa) =L= 112 ; (LHS = 0)
+     
+const16(bbb)..  100*Q(bbb) + A(bbb) =L= 112 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- const17  =E=  constraints 13&14&15&16: setting time variables
+
+const17(DCS)..  E(DCS) + Q(DCS) + T(DCS) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+const17(aaa)..  E(aaa) + Q(aaa) + T(aaa) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+const17(bbb)..  E(bbb) + Q(bbb) + T(bbb) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- const18  =E=  constraint 18: shlef life calculations
+
+const18(DCS,03f808cdd997cee9,Banana)..  (0.0257000871887629)*A(DCS) + (0.0870721476014821)*rank(DCS) + (0.166619684199414)*temp(03f808cdd997cee9) + SL(DCS,03f808cdd997cee9,Banana) =E= 0 ; (LHS = -3.73060011863708, INFES = 3.73060011863708 ****)
+     
+const18(DCS,03f808cdd997cee9,Broccoli)..  (0.323200469651017)*A(DCS) + (0.365765582614594)*rank(DCS) + (0.20724804874257)*temp(03f808cdd997cee9) + SL(DCS,03f808cdd997cee9,Broccoli) =E= 0 ; (LHS = -5.95574998855591, INFES = 5.95574998855591 ****)
+     
+const18(DCS,03f808cdd997cee9,Strawberry)..  (0.0833507432374481)*A(DCS) + (0.00952241999148892)*rank(DCS) + (0.0146637390240639)*temp(03f808cdd997cee9) + SL(DCS,03f808cdd997cee9,Strawberry) =E= 0 ; (LHS = -2.81561994552612, INFES = 2.81561994552612 ****)
+     
+REMAINING 39 ENTRIES SKIPPED
+
+
+---- const19  =G=  constraint 19: minimum requirement for shelf life
+
+const19(aaa,03f808cdd997cee9,Banana)..  SL(aaa,03f808cdd997cee9,Banana) =G= 1.5 ; (LHS = 0, INFES = 1.5 ****)
+     
+const19(aaa,03f808cdd997cee9,Broccoli)..  SL(aaa,03f808cdd997cee9,Broccoli) =G= 2 ; (LHS = 0, INFES = 2 ****)
+     
+const19(aaa,03f808cdd997cee9,Strawberry)..  SL(aaa,03f808cdd997cee9,Strawberry) =G= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- const20  =G=  
+
+const20(03f808cdd997cee9)..  temp(03f808cdd997cee9) =G= 0 ; (LHS = 0)
+     
+const20(551d181c465cf86f)..  temp(551d181c465cf86f) =G= 0 ; (LHS = 0)
+     
+
+---- const21  =L=  constraints 20&21: controlling truck temperature
+
+const21(03f808cdd997cee9)..  temp(03f808cdd997cee9) =L= 4 ; (LHS = 0)
+     
+const21(551d181c465cf86f)..  temp(551d181c465cf86f) =L= 4 ; (LHS = 0)
+     
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows - 10/31/20 00:22:10 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE simple Using MINLP From line 164
+
+
+---- Cost  total cost
+
+Cost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       OF
+
+
+---- tCost  cost for using trucks
+
+tCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       OF
+        1       eq1
+
+
+---- dCost  cost for distance traveled
+
+dCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       OF
+        1       eq2
+
+
+---- qCost  cost for quality lost
+
+qCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       OF
+        1       eq3
+
+
+---- eCost  cost for arriving early
+
+eCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       OF
+        1       eq4
+
+
+---- lCost  cost for arriving late
+
+lCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       OF
+        1       eq5
+
+
+---- X  traveling from i to j using truck k
+
+X(DCS,DCS,03f808cdd997cee9)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      eq2
+        1       const8
+
+X(DCS,DCS,551d181c465cf86f)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      eq2
+        1       const8
+
+X(DCS,aaa,03f808cdd997cee9)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      eq2
+     (-60)      eq3
+        6       const2(03f808cdd997cee9)
+        1       const3(aaa)
+        1       const5(aaa,03f808cdd997cee9)
+        1       const6(03f808cdd997cee9)
+       -6       const11(aaa,DCS,03f808cdd997cee9)
+     -100       const12(aaa,DCS,03f808cdd997cee9)
+
+REMAINING 95 ENTRIES SKIPPED
+
+---- Y  using truck k
+
+Y(03f808cdd997cee9)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     -200       eq1
+       -6       const1(03f808cdd997cee9)
+      -10       const2(03f808cdd997cee9)
+       -1       const6(03f808cdd997cee9)
+       -1       const7(03f808cdd997cee9)
+
+Y(551d181c465cf86f)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     -200       eq1
+       -6       const1(551d181c465cf86f)
+      -10       const2(551d181c465cf86f)
+       -1       const6(551d181c465cf86f)
+       -1       const7(551d181c465cf86f)
+
+
+---- E  arriving early at location j
+
+E(DCS)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      100       const13(DCS)
+        1       const17(DCS)
+
+E(aaa)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      eq4
+      100       const13(aaa)
+        1       const17(aaa)
+
+E(bbb)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      eq4
+      100       const13(bbb)
+        1       const17(bbb)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- Q  arriving on time at location j
+
+Q(DCS)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     -100       const15(DCS)
+      100       const16(DCS)
+        1       const17(DCS)
+
+Q(aaa)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     -100       const15(aaa)
+      100       const16(aaa)
+        1       const17(aaa)
+
+Q(bbb)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     -100       const15(bbb)
+      100       const16(bbb)
+        1       const17(bbb)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- T  arriving late at location j
+
+T(DCS)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     -100       const14(DCS)
+        1       const17(DCS)
+
+T(aaa)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     (117)      eq5
+     -100       const14(aaa)
+        1       const17(aaa)
+
+T(bbb)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     (119)      eq5
+     -100       const14(bbb)
+        1       const17(bbb)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- A  arrival time at location j
+
+A(DCS)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       const12(aaa,DCS,03f808cdd997cee9)
+       -1       const12(aaa,DCS,551d181c465cf86f)
+       -1       const12(bbb,DCS,03f808cdd997cee9)
+       -1       const12(bbb,DCS,551d181c465cf86f)
+       -1       const12(ccc,DCS,03f808cdd997cee9)
+       -1       const12(ccc,DCS,551d181c465cf86f)
+       -1       const12(ddd,DCS,03f808cdd997cee9)
+       -1       const12(ddd,DCS,551d181c465cf86f)
+       -1       const12(eee,DCS,03f808cdd997cee9)
+       -1       const12(eee,DCS,551d181c465cf86f)
+       -1       const12(DCE,DCS,03f808cdd997cee9)
+       -1       const12(DCE,DCS,551d181c465cf86f)
+        1       const12a
+        1       const13(DCS)
+        1       const14(DCS)
+        1       const15(DCS)
+        1       const16(DCS)
+       (0.0257) const18(DCS,03f808cdd997cee9,Banana)
+       (0.3232) const18(DCS,03f808cdd997cee9,Broccoli)
+       (0.0834) const18(DCS,03f808cdd997cee9,Strawberry)
+       (0.0257) const18(DCS,551d181c465cf86f,Banana)
+       (0.3232) const18(DCS,551d181c465cf86f,Broccoli)
+       (0.0834) const18(DCS,551d181c465cf86f,Strawberry)
+
+A(aaa)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      eq4
+       (0)      eq5
+        1       const12(aaa,DCS,03f808cdd997cee9)
+        1       const12(aaa,DCS,551d181c465cf86f)
+        1       const12(aaa,bbb,03f808cdd997cee9)
+        1       const12(aaa,bbb,551d181c465cf86f)
+        1       const12(aaa,ccc,03f808cdd997cee9)
+        1       const12(aaa,ccc,551d181c465cf86f)
+        1       const12(aaa,ddd,03f808cdd997cee9)
+        1       const12(aaa,ddd,551d181c465cf86f)
+        1       const12(aaa,eee,03f808cdd997cee9)
+        1       const12(aaa,eee,551d181c465cf86f)
+       -1       const12(bbb,aaa,03f808cdd997cee9)
+       -1       const12(bbb,aaa,551d181c465cf86f)
+       -1       const12(ccc,aaa,03f808cdd997cee9)
+       -1       const12(ccc,aaa,551d181c465cf86f)
+       -1       const12(ddd,aaa,03f808cdd997cee9)
+       -1       const12(ddd,aaa,551d181c465cf86f)
+       -1       const12(eee,aaa,03f808cdd997cee9)
+       -1       const12(eee,aaa,551d181c465cf86f)
+       -1       const12(DCE,aaa,03f808cdd997cee9)
+       -1       const12(DCE,aaa,551d181c465cf86f)
+        1       const13(aaa)
+        1       const14(aaa)
+        1       const15(aaa)
+        1       const16(aaa)
+       (0.0257) const18(aaa,03f808cdd997cee9,Banana)
+       (0.3232) const18(aaa,03f808cdd997cee9,Broccoli)
+       (0.0834) const18(aaa,03f808cdd997cee9,Strawberry)
+       (0.0257) const18(aaa,551d181c465cf86f,Banana)
+       (0.3232) const18(aaa,551d181c465cf86f,Broccoli)
+       (0.0834) const18(aaa,551d181c465cf86f,Strawberry)
+
+A(bbb)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      eq4
+       (0)      eq5
+       -1       const12(aaa,bbb,03f808cdd997cee9)
+       -1       const12(aaa,bbb,551d181c465cf86f)
+        1       const12(bbb,DCS,03f808cdd997cee9)
+        1       const12(bbb,DCS,551d181c465cf86f)
+        1       const12(bbb,aaa,03f808cdd997cee9)
+        1       const12(bbb,aaa,551d181c465cf86f)
+        1       const12(bbb,ccc,03f808cdd997cee9)
+        1       const12(bbb,ccc,551d181c465cf86f)
+        1       const12(bbb,ddd,03f808cdd997cee9)
+        1       const12(bbb,ddd,551d181c465cf86f)
+        1       const12(bbb,eee,03f808cdd997cee9)
+        1       const12(bbb,eee,551d181c465cf86f)
+       -1       const12(ccc,bbb,03f808cdd997cee9)
+       -1       const12(ccc,bbb,551d181c465cf86f)
+       -1       const12(ddd,bbb,03f808cdd997cee9)
+       -1       const12(ddd,bbb,551d181c465cf86f)
+       -1       const12(eee,bbb,03f808cdd997cee9)
+       -1       const12(eee,bbb,551d181c465cf86f)
+       -1       const12(DCE,bbb,03f808cdd997cee9)
+       -1       const12(DCE,bbb,551d181c465cf86f)
+        1       const13(bbb)
+        1       const14(bbb)
+        1       const15(bbb)
+        1       const16(bbb)
+       (0.0257) const18(bbb,03f808cdd997cee9,Banana)
+       (0.3232) const18(bbb,03f808cdd997cee9,Broccoli)
+       (0.0834) const18(bbb,03f808cdd997cee9,Strawberry)
+       (0.0257) const18(bbb,551d181c465cf86f,Banana)
+       (0.3232) const18(bbb,551d181c465cf86f,Broccoli)
+       (0.0834) const18(bbb,551d181c465cf86f,Strawberry)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- rank  for subtour constraint
+
+rank(DCS)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+       -1       const11(aaa,DCS,03f808cdd997cee9)
+       -1       const11(aaa,DCS,551d181c465cf86f)
+       -1       const11(bbb,DCS,03f808cdd997cee9)
+       -1       const11(bbb,DCS,551d181c465cf86f)
+       -1       const11(ccc,DCS,03f808cdd997cee9)
+       -1       const11(ccc,DCS,551d181c465cf86f)
+       -1       const11(ddd,DCS,03f808cdd997cee9)
+       -1       const11(ddd,DCS,551d181c465cf86f)
+       -1       const11(eee,DCS,03f808cdd997cee9)
+       -1       const11(eee,DCS,551d181c465cf86f)
+       -1       const11(DCE,DCS,03f808cdd997cee9)
+       -1       const11(DCE,DCS,551d181c465cf86f)
+        1       const11a
+       (0.0871) const18(DCS,03f808cdd997cee9,Banana)
+       (0.3658) const18(DCS,03f808cdd997cee9,Broccoli)
+       (0.0095) const18(DCS,03f808cdd997cee9,Strawberry)
+       (0.0871) const18(DCS,551d181c465cf86f,Banana)
+       (0.3658) const18(DCS,551d181c465cf86f,Broccoli)
+       (0.0095) const18(DCS,551d181c465cf86f,Strawberry)
+
+rank(aaa)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+        1       const11(aaa,DCS,03f808cdd997cee9)
+        1       const11(aaa,DCS,551d181c465cf86f)
+        1       const11(aaa,bbb,03f808cdd997cee9)
+        1       const11(aaa,bbb,551d181c465cf86f)
+        1       const11(aaa,ccc,03f808cdd997cee9)
+        1       const11(aaa,ccc,551d181c465cf86f)
+        1       const11(aaa,ddd,03f808cdd997cee9)
+        1       const11(aaa,ddd,551d181c465cf86f)
+        1       const11(aaa,eee,03f808cdd997cee9)
+        1       const11(aaa,eee,551d181c465cf86f)
+       -1       const11(bbb,aaa,03f808cdd997cee9)
+       -1       const11(bbb,aaa,551d181c465cf86f)
+       -1       const11(ccc,aaa,03f808cdd997cee9)
+       -1       const11(ccc,aaa,551d181c465cf86f)
+       -1       const11(ddd,aaa,03f808cdd997cee9)
+       -1       const11(ddd,aaa,551d181c465cf86f)
+       -1       const11(eee,aaa,03f808cdd997cee9)
+       -1       const11(eee,aaa,551d181c465cf86f)
+       -1       const11(DCE,aaa,03f808cdd997cee9)
+       -1       const11(DCE,aaa,551d181c465cf86f)
+       (0.0871) const18(aaa,03f808cdd997cee9,Banana)
+       (0.3658) const18(aaa,03f808cdd997cee9,Broccoli)
+       (0.0095) const18(aaa,03f808cdd997cee9,Strawberry)
+       (0.0871) const18(aaa,551d181c465cf86f,Banana)
+       (0.3658) const18(aaa,551d181c465cf86f,Broccoli)
+       (0.0095) const18(aaa,551d181c465cf86f,Strawberry)
+
+rank(bbb)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+       -1       const11(aaa,bbb,03f808cdd997cee9)
+       -1       const11(aaa,bbb,551d181c465cf86f)
+        1       const11(bbb,DCS,03f808cdd997cee9)
+        1       const11(bbb,DCS,551d181c465cf86f)
+        1       const11(bbb,aaa,03f808cdd997cee9)
+        1       const11(bbb,aaa,551d181c465cf86f)
+        1       const11(bbb,ccc,03f808cdd997cee9)
+        1       const11(bbb,ccc,551d181c465cf86f)
+        1       const11(bbb,ddd,03f808cdd997cee9)
+        1       const11(bbb,ddd,551d181c465cf86f)
+        1       const11(bbb,eee,03f808cdd997cee9)
+        1       const11(bbb,eee,551d181c465cf86f)
+       -1       const11(ccc,bbb,03f808cdd997cee9)
+       -1       const11(ccc,bbb,551d181c465cf86f)
+       -1       const11(ddd,bbb,03f808cdd997cee9)
+       -1       const11(ddd,bbb,551d181c465cf86f)
+       -1       const11(eee,bbb,03f808cdd997cee9)
+       -1       const11(eee,bbb,551d181c465cf86f)
+       -1       const11(DCE,bbb,03f808cdd997cee9)
+       -1       const11(DCE,bbb,551d181c465cf86f)
+       (0.0871) const18(bbb,03f808cdd997cee9,Banana)
+       (0.3658) const18(bbb,03f808cdd997cee9,Broccoli)
+       (0.0095) const18(bbb,03f808cdd997cee9,Strawberry)
+       (0.0871) const18(bbb,551d181c465cf86f,Banana)
+       (0.3658) const18(bbb,551d181c465cf86f,Broccoli)
+       (0.0095) const18(bbb,551d181c465cf86f,Strawberry)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- temp  temperature of truck k
+
+temp(03f808cdd997cee9)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+        1       eq6(03f808cdd997cee9)
+       (0.1666) const18(DCS,03f808cdd997cee9,Banana)
+       (0.2072) const18(DCS,03f808cdd997cee9,Broccoli)
+       (0.0147) const18(DCS,03f808cdd997cee9,Strawberry)
+       (0.1666) const18(aaa,03f808cdd997cee9,Banana)
+       (0.2072) const18(aaa,03f808cdd997cee9,Broccoli)
+       (0.0147) const18(aaa,03f808cdd997cee9,Strawberry)
+       (0.1666) const18(bbb,03f808cdd997cee9,Banana)
+       (0.2072) const18(bbb,03f808cdd997cee9,Broccoli)
+       (0.0147) const18(bbb,03f808cdd997cee9,Strawberry)
+       (0.1666) const18(ccc,03f808cdd997cee9,Banana)
+       (0.2072) const18(ccc,03f808cdd997cee9,Broccoli)
+       (0.0147) const18(ccc,03f808cdd997cee9,Strawberry)
+       (0.1666) const18(ddd,03f808cdd997cee9,Banana)
+       (0.2072) const18(ddd,03f808cdd997cee9,Broccoli)
+       (0.0147) const18(ddd,03f808cdd997cee9,Strawberry)
+       (0.1666) const18(eee,03f808cdd997cee9,Banana)
+       (0.2072) const18(eee,03f808cdd997cee9,Broccoli)
+       (0.0147) const18(eee,03f808cdd997cee9,Strawberry)
+       (0.1666) const18(DCE,03f808cdd997cee9,Banana)
+       (0.2072) const18(DCE,03f808cdd997cee9,Broccoli)
+       (0.0147) const18(DCE,03f808cdd997cee9,Strawberry)
+        1       const20(03f808cdd997cee9)
+        1       const21(03f808cdd997cee9)
+
+temp(551d181c465cf86f)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+        1       eq6(551d181c465cf86f)
+       (0.1666) const18(DCS,551d181c465cf86f,Banana)
+       (0.2072) const18(DCS,551d181c465cf86f,Broccoli)
+       (0.0147) const18(DCS,551d181c465cf86f,Strawberry)
+       (0.1666) const18(aaa,551d181c465cf86f,Banana)
+       (0.2072) const18(aaa,551d181c465cf86f,Broccoli)
+       (0.0147) const18(aaa,551d181c465cf86f,Strawberry)
+       (0.1666) const18(bbb,551d181c465cf86f,Banana)
+       (0.2072) const18(bbb,551d181c465cf86f,Broccoli)
+       (0.0147) const18(bbb,551d181c465cf86f,Strawberry)
+       (0.1666) const18(ccc,551d181c465cf86f,Banana)
+       (0.2072) const18(ccc,551d181c465cf86f,Broccoli)
+       (0.0147) const18(ccc,551d181c465cf86f,Strawberry)
+       (0.1666) const18(ddd,551d181c465cf86f,Banana)
+       (0.2072) const18(ddd,551d181c465cf86f,Broccoli)
+       (0.0147) const18(ddd,551d181c465cf86f,Strawberry)
+       (0.1666) const18(eee,551d181c465cf86f,Banana)
+       (0.2072) const18(eee,551d181c465cf86f,Broccoli)
+       (0.0147) const18(eee,551d181c465cf86f,Strawberry)
+       (0.1666) const18(DCE,551d181c465cf86f,Banana)
+       (0.2072) const18(DCE,551d181c465cf86f,Broccoli)
+       (0.0147) const18(DCE,551d181c465cf86f,Strawberry)
+        1       const20(551d181c465cf86f)
+        1       const21(551d181c465cf86f)
+
+
+---- SL  shelf life of product b at customer j
+
+SL(DCS,03f808cdd997cee9,Banana)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       const18(DCS,03f808cdd997cee9,Banana)
+
+SL(DCS,03f808cdd997cee9,Broccoli)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       const18(DCS,03f808cdd997cee9,Broccoli)
+
+SL(DCS,03f808cdd997cee9,Strawberry)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       const18(DCS,03f808cdd997cee9,Strawberry)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- rg  refrigeration cost of truck k
+
+rg(03f808cdd997cee9)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       eq6(03f808cdd997cee9)
+       -0.3031  eq7(DCS,aaa,03f808cdd997cee9)
+       -0.1242  eq7(DCS,bbb,03f808cdd997cee9)
+       -0.1742  eq7(DCS,ccc,03f808cdd997cee9)
+       -0.2253  eq7(DCS,ddd,03f808cdd997cee9)
+       -0.1092  eq7(DCS,eee,03f808cdd997cee9)
+       -0.0036  eq7(aaa,DCS,03f808cdd997cee9)
+       -0.3     eq7(aaa,aaa,03f808cdd997cee9)
+       -0.1211  eq7(aaa,bbb,03f808cdd997cee9)
+       -0.1711  eq7(aaa,ccc,03f808cdd997cee9)
+       -0.2286  eq7(aaa,ddd,03f808cdd997cee9)
+       -0.1125  eq7(aaa,eee,03f808cdd997cee9)
+       -0.0036  eq7(aaa,DCE,03f808cdd997cee9)
+       -0.0203  eq7(bbb,DCS,03f808cdd997cee9)
+       -0.3167  eq7(bbb,aaa,03f808cdd997cee9)
+       -0.1     eq7(bbb,bbb,03f808cdd997cee9)
+       -0.1586  eq7(bbb,ccc,03f808cdd997cee9)
+       -0.2436  eq7(bbb,ddd,03f808cdd997cee9)
+       -0.1269  eq7(bbb,eee,03f808cdd997cee9)
+       -0.0203  eq7(bbb,DCE,03f808cdd997cee9)
+       -0.0261  eq7(ccc,DCS,03f808cdd997cee9)
+       -0.3225  eq7(ccc,aaa,03f808cdd997cee9)
+       -0.1197  eq7(ccc,bbb,03f808cdd997cee9)
+       -0.15    eq7(ccc,ccc,03f808cdd997cee9)
+       -0.235   eq7(ccc,ddd,03f808cdd997cee9)
+       -0.135   eq7(ccc,eee,03f808cdd997cee9)
+       -0.0261  eq7(ccc,DCE,03f808cdd997cee9)
+       -0.0253  eq7(ddd,DCS,03f808cdd997cee9)
+       -0.3283  eq7(ddd,aaa,03f808cdd997cee9)
+       -0.1417  eq7(ddd,bbb,03f808cdd997cee9)
+       -0.1814  eq7(ddd,ccc,03f808cdd997cee9)
+       -0.2     eq7(ddd,ddd,03f808cdd997cee9)
+       -0.1239  eq7(ddd,eee,03f808cdd997cee9)
+       -0.0253  eq7(ddd,DCE,03f808cdd997cee9)
+       -0.0064  eq7(eee,DCS,03f808cdd997cee9)
+       -0.3094  eq7(eee,aaa,03f808cdd997cee9)
+       -0.1178  eq7(eee,bbb,03f808cdd997cee9)
+       -0.1806  eq7(eee,ccc,03f808cdd997cee9)
+       -0.2214  eq7(eee,ddd,03f808cdd997cee9)
+       -0.1     eq7(eee,eee,03f808cdd997cee9)
+       -0.0064  eq7(eee,DCE,03f808cdd997cee9)
+       -0.3031  eq7(DCE,aaa,03f808cdd997cee9)
+       -0.1242  eq7(DCE,bbb,03f808cdd997cee9)
+       -0.1742  eq7(DCE,ccc,03f808cdd997cee9)
+       -0.2253  eq7(DCE,ddd,03f808cdd997cee9)
+       -0.1092  eq7(DCE,eee,03f808cdd997cee9)
+
+rg(551d181c465cf86f)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       eq6(551d181c465cf86f)
+       -0.3031  eq7(DCS,aaa,551d181c465cf86f)
+       -0.1242  eq7(DCS,bbb,551d181c465cf86f)
+       -0.1742  eq7(DCS,ccc,551d181c465cf86f)
+       -0.2253  eq7(DCS,ddd,551d181c465cf86f)
+       -0.1092  eq7(DCS,eee,551d181c465cf86f)
+       -0.0036  eq7(aaa,DCS,551d181c465cf86f)
+       -0.3     eq7(aaa,aaa,551d181c465cf86f)
+       -0.1211  eq7(aaa,bbb,551d181c465cf86f)
+       -0.1711  eq7(aaa,ccc,551d181c465cf86f)
+       -0.2286  eq7(aaa,ddd,551d181c465cf86f)
+       -0.1125  eq7(aaa,eee,551d181c465cf86f)
+       -0.0036  eq7(aaa,DCE,551d181c465cf86f)
+       -0.0203  eq7(bbb,DCS,551d181c465cf86f)
+       -0.3167  eq7(bbb,aaa,551d181c465cf86f)
+       -0.1     eq7(bbb,bbb,551d181c465cf86f)
+       -0.1586  eq7(bbb,ccc,551d181c465cf86f)
+       -0.2436  eq7(bbb,ddd,551d181c465cf86f)
+       -0.1269  eq7(bbb,eee,551d181c465cf86f)
+       -0.0203  eq7(bbb,DCE,551d181c465cf86f)
+       -0.0261  eq7(ccc,DCS,551d181c465cf86f)
+       -0.3225  eq7(ccc,aaa,551d181c465cf86f)
+       -0.1197  eq7(ccc,bbb,551d181c465cf86f)
+       -0.15    eq7(ccc,ccc,551d181c465cf86f)
+       -0.235   eq7(ccc,ddd,551d181c465cf86f)
+       -0.135   eq7(ccc,eee,551d181c465cf86f)
+       -0.0261  eq7(ccc,DCE,551d181c465cf86f)
+       -0.0253  eq7(ddd,DCS,551d181c465cf86f)
+       -0.3283  eq7(ddd,aaa,551d181c465cf86f)
+       -0.1417  eq7(ddd,bbb,551d181c465cf86f)
+       -0.1814  eq7(ddd,ccc,551d181c465cf86f)
+       -0.2     eq7(ddd,ddd,551d181c465cf86f)
+       -0.1239  eq7(ddd,eee,551d181c465cf86f)
+       -0.0253  eq7(ddd,DCE,551d181c465cf86f)
+       -0.0064  eq7(eee,DCS,551d181c465cf86f)
+       -0.3094  eq7(eee,aaa,551d181c465cf86f)
+       -0.1178  eq7(eee,bbb,551d181c465cf86f)
+       -0.1806  eq7(eee,ccc,551d181c465cf86f)
+       -0.2214  eq7(eee,ddd,551d181c465cf86f)
+       -0.1     eq7(eee,eee,551d181c465cf86f)
+       -0.0064  eq7(eee,DCE,551d181c465cf86f)
+       -0.3031  eq7(DCE,aaa,551d181c465cf86f)
+       -0.1242  eq7(DCE,bbb,551d181c465cf86f)
+       -0.1742  eq7(DCE,ccc,551d181c465cf86f)
+       -0.2253  eq7(DCE,ddd,551d181c465cf86f)
+       -0.1092  eq7(DCE,eee,551d181c465cf86f)
+
+
+---- C  cost of traveling from i to j using truck k
+
+C(DCS,DCS,03f808cdd997cee9)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      eq2
+        1       eq7(DCS,DCS,03f808cdd997cee9)
+
+C(DCS,DCS,551d181c465cf86f)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      eq2
+        1       eq7(DCS,DCS,551d181c465cf86f)
+
+C(DCS,aaa,03f808cdd997cee9)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      eq2
+        1       eq7(DCS,aaa,03f808cdd997cee9)
+
+REMAINING 95 ENTRIES SKIPPED
+
+****
+****  9 Integer +INF Bounds have been reset to 100 (see Option IntVarUp)
+****
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows - 10/31/20 00:22:10 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE simple Using MINLP From line 164
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          31     SINGLE EQUATIONS          394
+BLOCKS OF VARIABLES          17     SINGLE VARIABLES          285
+NON ZERO ELEMENTS         1,566     NON LINEAR N-Z            426
+DERIVATIVE POOL              20     CONSTANT POOL              43
+CODE LENGTH               1,598     DISCRETE VARIABLES        130
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  31.1.1 r4b06116 WEX-WEI
+
+
+EXECUTION TIME       =        0.031 SECONDS      4 MB  31.1.1 r4b06116 WEX-WEI
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows - 10/31/20 00:22:10 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 164
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   simple              OBJECTIVE  Cost
+     TYPE    MINLP               DIRECTION  MINIMIZE
+     SOLVER  DICOPT              FROM LINE  164
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      8 Integer Solution          
+**** OBJECTIVE VALUE              493.9543
+
+ RESOURCE USAGE, LIMIT          0.281      1000.000
+ ITERATION COUNT, LIMIT      5377    2000000000
+ EVALUATION ERRORS              0             0
+-------------------------------------------------------------------------------
+Dicopt 2         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+-------------------------------------------------------------------------------
+by Aldo Vecchietti, Director del Instituto INGAR,
+   CONICET, UTN, Santa Fe, Argentina
+by Ignacio E. Grossmann, Chemical Engineering Faculty,
+   Carnegie Mellon University, Pittsburgh, PA, USA
+-------------------------------------------------------------------------------
+*** This solver runs with a community license.
+CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+*** This solver runs with a community license.
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 285 variables and 394 constraints
+    with 1566 Jacobian elements, 426 of which are nonlinear.
+    The Hessian of the Lagrangian has 16 elements on the diagonal,
+    241 elements below the diagonal, and 236 nonlinear variables.
+ 
+                   Pre-triangular equations:   10
+                   Post-triangular equations:  123
+                   Definitional equations:     30
+ 
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                            0.006 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+IBM ILOG CPLEX   31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.10.0.0
+
+Unable to load names.
+MIP status(101): integer optimal solution
+Cplex Time: 0.08sec (det. 58.68 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.36 ticks)
+Proven optimal solution.
+
+MIP Solution:          788.722772    (1784 iterations, 241 nodes)
+Final Solve:           788.722772    (6 iterations)
+
+Best possible:         788.722772
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Setting up next NLP
+CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+*** This solver runs with a community license.
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+                   Pre-triangular equations:   238
+                   Post-triangular equations:  30
+                   Definitional equations:     30
+ 
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+ 
+ CONOPT time Total                            0.002 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+--- GMO Resort Time 0ms
+
+IBM ILOG CPLEX   31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.10.0.0
+
+Unable to load names.
+MIP status(101): integer optimal solution
+Cplex Time: 0.08sec (det. 70.09 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.02sec (det. 0.55 ticks)
+Proven optimal solution.
+
+MIP Solution:          806.588323    (1634 iterations, 200 nodes)
+Final Solve:           806.588323    (14 iterations)
+
+Best possible:         806.588323
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Setting up next NLP
+CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+*** This solver runs with a community license.
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+                   Pre-triangular equations:   238
+                   Post-triangular equations:  30
+                   Definitional equations:     30
+ 
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+ 
+ CONOPT time Total                            0.001 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+IBM ILOG CPLEX   31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.10.0.0
+
+Unable to load names.
+MIP status(101): integer optimal solution
+Cplex Time: 0.09sec (det. 66.94 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.57 ticks)
+Proven optimal solution.
+
+MIP Solution:          806.588323    (1892 iterations, 146 nodes)
+Final Solve:           806.588323    (14 iterations)
+
+Best possible:         806.588323
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Setting up next NLP
+CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+*** This solver runs with a community license.
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+                   Pre-triangular equations:   238
+                   Post-triangular equations:  30
+                   Definitional equations:     30
+ 
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+ 
+ CONOPT time Total                            0.002 seconds
+   of which: Function evaluations             0.001 = 50.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+--- DICOPT: Stopped on NLP worsening
+
+      The search was stopped because the objective function
+      of the NLP subproblems started to deteriorate.
+
+--- DICOPT: Best integer solution found: 493.954264
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU OF                  .              .              .             1.0000      
+---- EQU eq1                 .              .              .             1.0000      
+---- EQU eq2                 .              .              .             1.0000      
+---- EQU eq3                 .              .              .             1.0000      
+---- EQU eq4                 .              .              .             1.0000      
+---- EQU eq5                 .              .              .             1.0000      
+
+  OF  objective function
+  eq5  separate cost equations
+
+---- EQU eq6  
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+03f808cdd997cee9        14.0000        14.0000        14.0000         0.4219      
+551d181c465cf86f        14.0000        14.0000        14.0000         0.5467      
+
+---- EQU eq7  refrigeration and fule costs
+
+                                LOWER          LEVEL          UPPER         MARGINAL
+
+DCS.DCS.03f808cdd997cee9          .              .              .             EPS         
+DCS.DCS.551d181c465cf86f          .              .              .             EPS         
+DCS.aaa.03f808cdd997cee9         8.0353         8.0353         8.0353         1.0000      
+DCS.aaa.551d181c465cf86f         8.0353         8.0353         8.0353         EPS         
+DCS.bbb.03f808cdd997cee9         4.4608         4.4608         4.4608         EPS         
+DCS.bbb.551d181c465cf86f         4.4608         4.4608         4.4608         EPS         
+DCS.ccc.03f808cdd997cee9         5.7608         5.7608         5.7608         EPS         
+DCS.ccc.551d181c465cf86f         5.7608         5.7608         5.7608         EPS         
+DCS.ddd.03f808cdd997cee9         7.1464         7.1464         7.1464         EPS         
+DCS.ddd.551d181c465cf86f         7.1464         7.1464         7.1464         1.0000      
+DCS.eee.03f808cdd997cee9         3.3058         3.3058         3.3058         EPS         
+DCS.eee.551d181c465cf86f         3.3058         3.3058         3.3058         EPS         
+DCS.DCE.03f808cdd997cee9          .              .              .             EPS         
+DCS.DCE.551d181c465cf86f          .              .              .             EPS         
+aaa.DCS.03f808cdd997cee9         0.2781         0.2781         0.2781         EPS         
+aaa.DCS.551d181c465cf86f         0.2781         0.2781         0.2781         EPS         
+aaa.aaa.03f808cdd997cee9         7.8000         7.8000         7.8000         EPS         
+aaa.aaa.551d181c465cf86f         7.8000         7.8000         7.8000         EPS         
+aaa.bbb.03f808cdd997cee9         4.2256         4.2256         4.2256         EPS         
+aaa.bbb.551d181c465cf86f         4.2256         4.2256         4.2256         EPS         
+aaa.ccc.03f808cdd997cee9         5.5256         5.5256         5.5256         EPS         
+aaa.ccc.551d181c465cf86f         5.5256         5.5256         5.5256         EPS         
+aaa.ddd.03f808cdd997cee9         7.4031         7.4031         7.4031         EPS         
+aaa.ddd.551d181c465cf86f         7.4031         7.4031         7.4031         EPS         
+aaa.eee.03f808cdd997cee9         3.5625         3.5625         3.5625         1.0000      
+aaa.eee.551d181c465cf86f         3.5625         3.5625         3.5625         EPS         
+aaa.DCE.03f808cdd997cee9         0.2781         0.2781         0.2781         EPS         
+aaa.DCE.551d181c465cf86f         0.2781         0.2781         0.2781         EPS         
+bbb.DCS.03f808cdd997cee9         1.5614         1.5614         1.5614         EPS         
+bbb.DCS.551d181c465cf86f         1.5614         1.5614         1.5614         EPS         
+bbb.aaa.03f808cdd997cee9         9.0833         9.0833         9.0833         EPS         
+bbb.aaa.551d181c465cf86f         9.0833         9.0833         9.0833         EPS         
+bbb.bbb.03f808cdd997cee9         2.6000         2.6000         2.6000         EPS         
+bbb.bbb.551d181c465cf86f         2.6000         2.6000         2.6000         EPS         
+bbb.ccc.03f808cdd997cee9         4.5631         4.5631         4.5631         EPS         
+bbb.ccc.551d181c465cf86f         4.5631         4.5631         4.5631         EPS         
+bbb.ddd.03f808cdd997cee9         8.5581         8.5581         8.5581         EPS         
+bbb.ddd.551d181c465cf86f         8.5581         8.5581         8.5581         EPS         
+bbb.eee.03f808cdd997cee9         4.6747         4.6747         4.6747         EPS         
+bbb.eee.551d181c465cf86f         4.6747         4.6747         4.6747         EPS         
+bbb.DCE.03f808cdd997cee9         1.5614         1.5614         1.5614         EPS         
+bbb.DCE.551d181c465cf86f         1.5614         1.5614         1.5614         1.0000      
+ccc.DCS.03f808cdd997cee9         2.0106         2.0106         2.0106         EPS         
+ccc.DCS.551d181c465cf86f         2.0106         2.0106         2.0106         EPS         
+ccc.aaa.03f808cdd997cee9         9.5325         9.5325         9.5325         EPS         
+ccc.aaa.551d181c465cf86f         9.5325         9.5325         9.5325         EPS         
+ccc.bbb.03f808cdd997cee9         4.1186         4.1186         4.1186         EPS         
+ccc.bbb.551d181c465cf86f         4.1186         4.1186         4.1186         1.0000      
+ccc.ccc.03f808cdd997cee9         3.9000         3.9000         3.9000         EPS         
+ccc.ccc.551d181c465cf86f         3.9000         3.9000         3.9000         EPS         
+ccc.ddd.03f808cdd997cee9         7.8950         7.8950         7.8950         EPS         
+ccc.ddd.551d181c465cf86f         7.8950         7.8950         7.8950         EPS         
+ccc.eee.03f808cdd997cee9         5.2950         5.2950         5.2950         EPS         
+ccc.eee.551d181c465cf86f         5.2950         5.2950         5.2950         EPS         
+ccc.DCE.03f808cdd997cee9         2.0106         2.0106         2.0106         EPS         
+ccc.DCE.551d181c465cf86f         2.0106         2.0106         2.0106         EPS         
+ddd.DCS.03f808cdd997cee9         1.9464         1.9464         1.9464         EPS         
+ddd.DCS.551d181c465cf86f         1.9464         1.9464         1.9464         EPS         
+ddd.aaa.03f808cdd997cee9         9.9817         9.9817         9.9817         EPS         
+ddd.aaa.551d181c465cf86f         9.9817         9.9817         9.9817         EPS         
+ddd.bbb.03f808cdd997cee9         5.8083         5.8083         5.8083         EPS         
+ddd.bbb.551d181c465cf86f         5.8083         5.8083         5.8083         EPS         
+ddd.ccc.03f808cdd997cee9         6.3169         6.3169         6.3169         EPS         
+ddd.ccc.551d181c465cf86f         6.3169         6.3169         6.3169         1.0000      
+ddd.ddd.03f808cdd997cee9         5.2000         5.2000         5.2000         EPS         
+ddd.ddd.551d181c465cf86f         5.2000         5.2000         5.2000         EPS         
+ddd.eee.03f808cdd997cee9         4.4394         4.4394         4.4394         EPS         
+ddd.eee.551d181c465cf86f         4.4394         4.4394         4.4394         EPS         
+ddd.DCE.03f808cdd997cee9         1.9464         1.9464         1.9464         EPS         
+ddd.DCE.551d181c465cf86f         1.9464         1.9464         1.9464         EPS         
+eee.DCS.03f808cdd997cee9         0.4919         0.4919         0.4919         EPS         
+eee.DCS.551d181c465cf86f         0.4919         0.4919         0.4919         EPS         
+eee.aaa.03f808cdd997cee9         8.5272         8.5272         8.5272         EPS         
+eee.aaa.551d181c465cf86f         8.5272         8.5272         8.5272         EPS         
+eee.bbb.03f808cdd997cee9         3.9689         3.9689         3.9689         EPS         
+eee.bbb.551d181c465cf86f         3.9689         3.9689         3.9689         EPS         
+eee.ccc.03f808cdd997cee9         6.2528         6.2528         6.2528         EPS         
+eee.ccc.551d181c465cf86f         6.2528         6.2528         6.2528         EPS         
+eee.ddd.03f808cdd997cee9         6.8469         6.8469         6.8469         EPS         
+eee.ddd.551d181c465cf86f         6.8469         6.8469         6.8469         EPS         
+eee.eee.03f808cdd997cee9         2.6000         2.6000         2.6000         EPS         
+eee.eee.551d181c465cf86f         2.6000         2.6000         2.6000         EPS         
+eee.DCE.03f808cdd997cee9         0.4919         0.4919         0.4919         1.0000      
+eee.DCE.551d181c465cf86f         0.4919         0.4919         0.4919         EPS         
+DCE.DCS.03f808cdd997cee9          .              .              .             EPS         
+DCE.DCS.551d181c465cf86f          .              .              .             EPS         
+DCE.aaa.03f808cdd997cee9         8.0353         8.0353         8.0353         EPS         
+DCE.aaa.551d181c465cf86f         8.0353         8.0353         8.0353         EPS         
+DCE.bbb.03f808cdd997cee9         4.4608         4.4608         4.4608         EPS         
+DCE.bbb.551d181c465cf86f         4.4608         4.4608         4.4608         EPS         
+DCE.ccc.03f808cdd997cee9         5.7608         5.7608         5.7608         EPS         
+DCE.ccc.551d181c465cf86f         5.7608         5.7608         5.7608         EPS         
+DCE.ddd.03f808cdd997cee9         7.1464         7.1464         7.1464         EPS         
+DCE.ddd.551d181c465cf86f         7.1464         7.1464         7.1464         EPS         
+DCE.eee.03f808cdd997cee9         3.3058         3.3058         3.3058         EPS         
+DCE.eee.551d181c465cf86f         3.3058         3.3058         3.3058         EPS         
+DCE.DCE.03f808cdd997cee9          .              .              .             EPS         
+DCE.DCE.551d181c465cf86f          .              .              .             EPS         
+
+---- EQU const1  constraint 1: if truck is used set to 1
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+03f808cdd997cee9        -INF           -5.0000          .              .          
+551d181c465cf86f        -INF           -4.0000          .              .          
+
+---- EQU const2  constraint 2: demand of trib is less than max load of truck
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+03f808cdd997cee9        -INF           -2.0000          .              .          
+551d181c465cf86f        -INF           -1.0000          .              .          
+
+---- EQU const3  constraint 3: all customer nodes must be entered once
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+aaa         1.0000         1.0000         1.0000          .          
+bbb         1.0000         1.0000         1.0000          .          
+ccc         1.0000         1.0000         1.0000          .          
+ddd         1.0000         1.0000         1.0000          .          
+eee         1.0000         1.0000         1.0000          .          
+
+---- EQU const4  constraint 4: all custmoer nodes must be left once
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+aaa         1.0000         1.0000         1.0000          .          
+bbb         1.0000         1.0000         1.0000          .          
+ccc         1.0000         1.0000         1.0000          .          
+ddd         1.0000         1.0000         1.0000          .          
+eee         1.0000         1.0000         1.0000          .          
+
+---- EQU const5  constraint 5: same truck to enter and leave node
+
+                            LOWER          LEVEL          UPPER         MARGINAL
+
+aaa.03f808cdd997cee9          .              .              .              .          
+aaa.551d181c465cf86f          .              .              .              .          
+bbb.03f808cdd997cee9          .              .              .              .          
+bbb.551d181c465cf86f          .              .              .              .          
+ccc.03f808cdd997cee9          .              .              .              .          
+ccc.551d181c465cf86f          .              .              .              .          
+ddd.03f808cdd997cee9          .              .              .              .          
+ddd.551d181c465cf86f          .              .              .              .          
+eee.03f808cdd997cee9          .              .              .              .          
+eee.551d181c465cf86f          .              .              .              .          
+
+---- EQU const6  
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+03f808cdd997cee9          .              .              .              .          
+551d181c465cf86f          .              .              .              .          
+
+---- EQU const7  constraints 6&7: warehouse must be left and entered once per trip
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+03f808cdd997cee9          .              .              .              .          
+551d181c465cf86f          .              .              .              .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU const8              .              .              .              .          
+---- EQU const9              .              .              .              .          
+---- EQU const10             .              .              .              .          
+
+  const10  constraints 8&9&10: further warehouse movement control
+
+---- EQU const11  
+
+                                LOWER          LEVEL          UPPER         MARGINAL
+
+aaa.DCS.03f808cdd997cee9        -5.0000        -5.0000        +INF             .          
+aaa.DCS.551d181c465cf86f        -5.0000         1.0000        +INF             .          
+aaa.aaa.03f808cdd997cee9        -5.0000          .            +INF             .          
+aaa.aaa.551d181c465cf86f        -5.0000          .            +INF             .          
+aaa.bbb.03f808cdd997cee9        -5.0000        -2.0000        +INF             .          
+aaa.bbb.551d181c465cf86f        -5.0000        -2.0000        +INF             .          
+aaa.ccc.03f808cdd997cee9        -5.0000        -1.0000        +INF             .          
+aaa.ccc.551d181c465cf86f        -5.0000        -1.0000        +INF             .          
+aaa.ddd.03f808cdd997cee9        -5.0000          .            +INF             .          
+aaa.ddd.551d181c465cf86f        -5.0000          .            +INF             .          
+aaa.eee.03f808cdd997cee9        -5.0000        -1.0000        +INF             .          
+aaa.eee.551d181c465cf86f        -5.0000        -1.0000        +INF             .          
+bbb.DCS.03f808cdd997cee9        -5.0000         3.0000        +INF             .          
+bbb.DCS.551d181c465cf86f        -5.0000         3.0000        +INF             .          
+bbb.aaa.03f808cdd997cee9        -5.0000         2.0000        +INF             .          
+bbb.aaa.551d181c465cf86f        -5.0000         2.0000        +INF             .          
+bbb.bbb.03f808cdd997cee9        -5.0000          .            +INF             .          
+bbb.bbb.551d181c465cf86f        -5.0000          .            +INF             .          
+bbb.ccc.03f808cdd997cee9        -5.0000         1.0000        +INF             .          
+bbb.ccc.551d181c465cf86f        -5.0000        -5.0000        +INF             .          
+bbb.ddd.03f808cdd997cee9        -5.0000         2.0000        +INF             .          
+bbb.ddd.551d181c465cf86f        -5.0000         2.0000        +INF             .          
+bbb.eee.03f808cdd997cee9        -5.0000         1.0000        +INF             .          
+bbb.eee.551d181c465cf86f        -5.0000         1.0000        +INF             .          
+ccc.DCS.03f808cdd997cee9        -5.0000         2.0000        +INF             .          
+ccc.DCS.551d181c465cf86f        -5.0000         2.0000        +INF             .          
+ccc.aaa.03f808cdd997cee9        -5.0000         1.0000        +INF             .          
+ccc.aaa.551d181c465cf86f        -5.0000         1.0000        +INF             .          
+ccc.bbb.03f808cdd997cee9        -5.0000        -1.0000        +INF             .          
+ccc.bbb.551d181c465cf86f        -5.0000        -1.0000        +INF             .          
+ccc.ccc.03f808cdd997cee9        -5.0000          .            +INF             .          
+ccc.ccc.551d181c465cf86f        -5.0000          .            +INF             .          
+ccc.ddd.03f808cdd997cee9        -5.0000         1.0000        +INF             .          
+ccc.ddd.551d181c465cf86f        -5.0000        -5.0000        +INF             .          
+ccc.eee.03f808cdd997cee9        -5.0000          .            +INF             .          
+ccc.eee.551d181c465cf86f        -5.0000          .            +INF             .          
+ddd.DCS.03f808cdd997cee9        -5.0000         1.0000        +INF             .          
+ddd.DCS.551d181c465cf86f        -5.0000        -5.0000        +INF             .          
+ddd.aaa.03f808cdd997cee9        -5.0000          .            +INF             .          
+ddd.aaa.551d181c465cf86f        -5.0000          .            +INF             .          
+ddd.bbb.03f808cdd997cee9        -5.0000        -2.0000        +INF             .          
+ddd.bbb.551d181c465cf86f        -5.0000        -2.0000        +INF             .          
+ddd.ccc.03f808cdd997cee9        -5.0000        -1.0000        +INF             .          
+ddd.ccc.551d181c465cf86f        -5.0000        -1.0000        +INF             .          
+ddd.ddd.03f808cdd997cee9        -5.0000          .            +INF             .          
+ddd.ddd.551d181c465cf86f        -5.0000          .            +INF             .          
+ddd.eee.03f808cdd997cee9        -5.0000        -1.0000        +INF             .          
+ddd.eee.551d181c465cf86f        -5.0000        -1.0000        +INF             .          
+eee.DCS.03f808cdd997cee9        -5.0000         2.0000        +INF             .          
+eee.DCS.551d181c465cf86f        -5.0000         2.0000        +INF             .          
+eee.aaa.03f808cdd997cee9        -5.0000        -5.0000        +INF             .          
+eee.aaa.551d181c465cf86f        -5.0000         1.0000        +INF             .          
+eee.bbb.03f808cdd997cee9        -5.0000        -1.0000        +INF             .          
+eee.bbb.551d181c465cf86f        -5.0000        -1.0000        +INF             .          
+eee.ccc.03f808cdd997cee9        -5.0000          .            +INF             .          
+eee.ccc.551d181c465cf86f        -5.0000          .            +INF             .          
+eee.ddd.03f808cdd997cee9        -5.0000         1.0000        +INF             .          
+eee.ddd.551d181c465cf86f        -5.0000         1.0000        +INF             .          
+eee.eee.03f808cdd997cee9        -5.0000          .            +INF             .          
+eee.eee.551d181c465cf86f        -5.0000          .            +INF             .          
+DCE.DCS.03f808cdd997cee9        -5.0000        94.0000        +INF             .          
+DCE.DCS.551d181c465cf86f        -5.0000        94.0000        +INF             .          
+DCE.aaa.03f808cdd997cee9        -5.0000        93.0000        +INF             .          
+DCE.aaa.551d181c465cf86f        -5.0000        93.0000        +INF             .          
+DCE.bbb.03f808cdd997cee9        -5.0000        91.0000        +INF             .          
+DCE.bbb.551d181c465cf86f        -5.0000        85.0000        +INF             .          
+DCE.ccc.03f808cdd997cee9        -5.0000        92.0000        +INF             .          
+DCE.ccc.551d181c465cf86f        -5.0000        92.0000        +INF             .          
+DCE.ddd.03f808cdd997cee9        -5.0000        93.0000        +INF             .          
+DCE.ddd.551d181c465cf86f        -5.0000        93.0000        +INF             .          
+DCE.eee.03f808cdd997cee9        -5.0000        86.0000        +INF             .          
+DCE.eee.551d181c465cf86f        -5.0000        92.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU const11a            .              .              .              .          
+
+  const11a  constraint 11&11a: subtour elimination constraints
+
+---- EQU const12  
+
+                                LOWER          LEVEL          UPPER         MARGINAL
+
+aaa.DCS.03f808cdd997cee9       -99.9969       -99.9969        +INF            1.0682      
+aaa.DCS.551d181c465cf86f       -99.9969         0.0031        +INF             .          
+aaa.aaa.03f808cdd997cee9       -99.7000          .            +INF             .          
+aaa.aaa.551d181c465cf86f       -99.7000          .            +INF             .          
+aaa.bbb.03f808cdd997cee9       -99.8833       -11.9969        +INF             .          
+aaa.bbb.551d181c465cf86f       -99.8833       -11.9969        +INF             .          
+aaa.ccc.03f808cdd997cee9       -99.8275        -0.2536        +INF             .          
+aaa.ccc.551d181c465cf86f       -99.8275        -0.2536        +INF             .          
+aaa.ddd.03f808cdd997cee9       -99.7717        -0.0222        +INF             .          
+aaa.ddd.551d181c465cf86f       -99.7717        -0.0222        +INF             .          
+aaa.eee.03f808cdd997cee9       -99.8906       -11.9969        +INF             .          
+aaa.eee.551d181c465cf86f       -99.8906       -11.9969        +INF             .          
+bbb.DCS.03f808cdd997cee9       -99.9758        12.0000        +INF             .          
+bbb.DCS.551d181c465cf86f       -99.9758        12.0000        +INF             .          
+bbb.aaa.03f808cdd997cee9       -99.6789        11.9969        +INF             .          
+bbb.aaa.551d181c465cf86f       -99.6789        11.9969        +INF             .          
+bbb.bbb.03f808cdd997cee9       -99.9000          .            +INF             .          
+bbb.bbb.551d181c465cf86f       -99.9000          .            +INF             .          
+bbb.ccc.03f808cdd997cee9       -99.8303        11.7433        +INF             .          
+bbb.ccc.551d181c465cf86f       -99.8303       -88.2567        +INF             .          
+bbb.ddd.03f808cdd997cee9       -99.7583        11.9747        +INF             .          
+bbb.ddd.551d181c465cf86f       -99.7583        11.9747        +INF             .          
+bbb.eee.03f808cdd997cee9       -99.8822   -1.77636E-15        +INF             .          
+bbb.eee.551d181c465cf86f       -99.8822   -1.77636E-15        +INF             .          
+ccc.DCS.03f808cdd997cee9       -99.9758         0.2567        +INF             .          
+ccc.DCS.551d181c465cf86f       -99.9758         0.2567        +INF             .          
+ccc.aaa.03f808cdd997cee9       -99.6789         0.2536        +INF             .          
+ccc.aaa.551d181c465cf86f       -99.6789         0.2536        +INF             .          
+ccc.bbb.03f808cdd997cee9       -99.8914       -11.7433        +INF             .          
+ccc.bbb.551d181c465cf86f       -99.8914       -11.7433        +INF             .          
+ccc.ccc.03f808cdd997cee9       -99.8500          .            +INF             .          
+ccc.ccc.551d181c465cf86f       -99.8500          .            +INF             .          
+ccc.ddd.03f808cdd997cee9       -99.7686         0.2314        +INF             .          
+ccc.ddd.551d181c465cf86f       -99.7686       -99.7686        +INF            0.7100      
+ccc.eee.03f808cdd997cee9       -99.8694       -11.7433        +INF             .          
+ccc.eee.551d181c465cf86f       -99.8694       -11.7433        +INF             .          
+ddd.DCS.03f808cdd997cee9       -99.9747         0.0253        +INF             .          
+ddd.DCS.551d181c465cf86f       -99.9747       -99.9747        +INF            4.4495      
+ddd.aaa.03f808cdd997cee9       -99.6714         0.0222        +INF             .          
+ddd.aaa.551d181c465cf86f       -99.6714         0.0222        +INF             .          
+ddd.bbb.03f808cdd997cee9       -99.8564       -11.9747        +INF             .          
+ddd.bbb.551d181c465cf86f       -99.8564       -11.9747        +INF             .          
+ddd.ccc.03f808cdd997cee9       -99.8150        -0.2314        +INF             .          
+ddd.ccc.551d181c465cf86f       -99.8150        -0.2314        +INF             .          
+ddd.ddd.03f808cdd997cee9       -99.8000          .            +INF             .          
+ddd.ddd.551d181c465cf86f       -99.8000          .            +INF             .          
+ddd.eee.03f808cdd997cee9       -99.8786       -11.9747        +INF             .          
+ddd.eee.551d181c465cf86f       -99.8786       -11.9747        +INF             .          
+eee.DCS.03f808cdd997cee9       -99.9908        12.0000        +INF             .          
+eee.DCS.551d181c465cf86f       -99.9908        12.0000        +INF             .          
+eee.aaa.03f808cdd997cee9       -99.6875       -88.0031        +INF             .          
+eee.aaa.551d181c465cf86f       -99.6875        11.9969        +INF             .          
+eee.bbb.03f808cdd997cee9       -99.8731   1.776357E-15        +INF             .          
+eee.bbb.551d181c465cf86f       -99.8731   1.776357E-15        +INF             .          
+eee.ccc.03f808cdd997cee9       -99.8150        11.7433        +INF             .          
+eee.ccc.551d181c465cf86f       -99.8150        11.7433        +INF             .          
+eee.ddd.03f808cdd997cee9       -99.7761        11.9747        +INF             .          
+eee.ddd.551d181c465cf86f       -99.7761        11.9747        +INF             .          
+eee.eee.03f808cdd997cee9       -99.9000          .            +INF             .          
+eee.eee.551d181c465cf86f       -99.9000          .            +INF             .          
+DCE.DCS.03f808cdd997cee9      -100.0000       100.0000        +INF             .          
+DCE.DCS.551d181c465cf86f      -100.0000       100.0000        +INF             .          
+DCE.aaa.03f808cdd997cee9       -99.6964        99.9969        +INF             .          
+DCE.aaa.551d181c465cf86f       -99.6964        99.9969        +INF             .          
+DCE.bbb.03f808cdd997cee9       -99.8797        88.0000        +INF             .          
+DCE.bbb.551d181c465cf86f       -99.8797       -12.0000        +INF             .          
+DCE.ccc.03f808cdd997cee9       -99.8239        99.7433        +INF             .          
+DCE.ccc.551d181c465cf86f       -99.8239        99.7433        +INF             .          
+DCE.ddd.03f808cdd997cee9       -99.7747        99.9747        +INF             .          
+DCE.ddd.551d181c465cf86f       -99.7747        99.9747        +INF             .          
+DCE.eee.03f808cdd997cee9       -99.8936       -12.0000        +INF             .          
+DCE.eee.551d181c465cf86f       -99.8936        88.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU const12a            .              .              .             5.5178      
+
+  const12a  constraint 12&12a: arrival time equations
+
+---- EQU const13  constraint 13: arrival time after lower bound
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+DCS        -INF             .           100.0000          .          
+aaa        -INF            0.0031       100.0000          .          
+bbb        -INF           12.0000       100.0000          .          
+ccc        -INF            0.2567       100.0000          .          
+ddd        -INF            0.0253       100.0000          .          
+eee        -INF           12.0000       100.0000          .          
+DCE        -INF          100.0000       100.0000         EPS         
+
+---- EQU const14  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+DCS      -100.0000          .            +INF             .          
+aaa       -88.0000         0.0031        +INF             .          
+bbb       -88.0000       -88.0000        +INF           12.4651      
+ccc       -88.0000         0.2567        +INF             .          
+ddd       -88.0000         0.0253        +INF             .          
+eee       -88.0000       -88.0000        +INF           10.2503      
+DCE      -100.0000          .            +INF             .          
+
+---- EQU const15  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+DCS      -100.0000      -100.0000        +INF             .          
+aaa      -100.0000       -99.9969        +INF             .          
+bbb      -100.0000        12.0000        +INF             .          
+ccc      -100.0000       -99.7433        +INF             .          
+ddd      -100.0000       -99.9747        +INF             .          
+eee      -100.0000        12.0000        +INF             .          
+DCE      -100.0000       100.0000        +INF             .          
+
+---- EQU const16  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+DCS        -INF          100.0000       100.0000          .          
+aaa        -INF          100.0031       112.0000          .          
+bbb        -INF           12.0000       112.0000          .          
+ccc        -INF          100.2567       112.0000          .          
+ddd        -INF          100.0253       112.0000          .          
+eee        -INF           12.0000       112.0000          .          
+DCE        -INF          100.0000       100.0000          .          
+
+---- EQU const17  constraints 13&14&15&16: setting time variables
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+DCS         1.0000         1.0000         1.0000          .          
+aaa         1.0000         1.0000         1.0000          .          
+bbb         1.0000         1.0000         1.0000          .          
+ccc         1.0000         1.0000         1.0000          .          
+ddd         1.0000         1.0000         1.0000          .          
+eee         1.0000         1.0000         1.0000          .          
+DCE         1.0000         1.0000         1.0000          .          
+
+---- EQU const18  constraint 18: shlef life calculations
+
+                                       LOWER          LEVEL          UPPER         MARGINAL
+
+DCS.03f808cdd997cee9.Banana              .              .              .             EPS         
+DCS.03f808cdd997cee9.Broccoli            .              .              .             EPS         
+DCS.03f808cdd997cee9.Strawberry          .              .              .             EPS         
+DCS.551d181c465cf86f.Banana              .              .              .             EPS         
+DCS.551d181c465cf86f.Broccoli            .              .              .             EPS         
+DCS.551d181c465cf86f.Strawberry          .              .              .             EPS         
+aaa.03f808cdd997cee9.Banana              .              .              .           -12.0624      
+aaa.03f808cdd997cee9.Broccoli            .              .              .            -2.5186      
+aaa.03f808cdd997cee9.Strawberry          .              .              .             EPS         
+aaa.551d181c465cf86f.Banana              .              .              .             EPS         
+aaa.551d181c465cf86f.Broccoli            .              .              .             EPS         
+aaa.551d181c465cf86f.Strawberry          .              .              .             EPS         
+bbb.03f808cdd997cee9.Banana              .              .              .             EPS         
+bbb.03f808cdd997cee9.Broccoli            .              .              .             EPS         
+bbb.03f808cdd997cee9.Strawberry          .              .              .             EPS         
+bbb.551d181c465cf86f.Banana              .              .              .             EPS         
+bbb.551d181c465cf86f.Broccoli            .              .              .             EPS         
+bbb.551d181c465cf86f.Strawberry          .              .              .           -42.6194      
+ccc.03f808cdd997cee9.Banana              .              .              .             EPS         
+ccc.03f808cdd997cee9.Broccoli            .              .              .             EPS         
+ccc.03f808cdd997cee9.Strawberry          .              .              .             EPS         
+ccc.551d181c465cf86f.Banana              .              .              .             EPS         
+ccc.551d181c465cf86f.Broccoli            .              .              .            -2.5186      
+ccc.551d181c465cf86f.Strawberry          .              .              .             EPS         
+ddd.03f808cdd997cee9.Banana              .              .              .             EPS         
+ddd.03f808cdd997cee9.Broccoli            .              .              .             EPS         
+ddd.03f808cdd997cee9.Strawberry          .              .              .             EPS         
+ddd.551d181c465cf86f.Banana              .              .              .            -8.0416      
+ddd.551d181c465cf86f.Broccoli            .              .              .             EPS         
+ddd.551d181c465cf86f.Strawberry          .              .              .           -42.6194      
+eee.03f808cdd997cee9.Banana              .              .              .             EPS         
+eee.03f808cdd997cee9.Broccoli            .              .              .            -1.6790      
+eee.03f808cdd997cee9.Strawberry          .              .              .             EPS         
+eee.551d181c465cf86f.Banana              .              .              .             EPS         
+eee.551d181c465cf86f.Broccoli            .              .              .             EPS         
+eee.551d181c465cf86f.Strawberry          .              .              .             EPS         
+DCE.03f808cdd997cee9.Banana              .              .              .             EPS         
+DCE.03f808cdd997cee9.Broccoli            .              .              .             EPS         
+DCE.03f808cdd997cee9.Strawberry          .              .              .             EPS         
+DCE.551d181c465cf86f.Banana              .              .              .             EPS         
+DCE.551d181c465cf86f.Broccoli            .              .              .             EPS         
+DCE.551d181c465cf86f.Strawberry          .              .              .             EPS         
+
+---- EQU const19  constraint 19: minimum requirement for shelf life
+
+                                       LOWER          LEVEL          UPPER         MARGINAL
+
+aaa.03f808cdd997cee9.Banana             1.5000         3.6445        +INF             .          
+aaa.03f808cdd997cee9.Broccoli           2.0000         5.6001        +INF             .          
+aaa.03f808cdd997cee9.Strawberry         1.0000         2.8059        +INF             .          
+aaa.551d181c465cf86f.Banana             1.5000         3.6445        +INF             .          
+aaa.551d181c465cf86f.Broccoli           2.0000         5.6001        +INF             .          
+aaa.551d181c465cf86f.Strawberry         1.0000         2.8059        +INF             .          
+bbb.03f808cdd997cee9.Banana             1.5000         3.2023        +INF             .          
+bbb.03f808cdd997cee9.Broccoli           2.0000         2.5829        +INF             .          
+bbb.03f808cdd997cee9.Strawberry         1.0000         1.9538        +INF             .          
+bbb.551d181c465cf86f.Banana             1.5000         3.2023        +INF             .          
+bbb.551d181c465cf86f.Broccoli           2.0000         2.5829        +INF             .          
+bbb.551d181c465cf86f.Strawberry         1.0000         1.9538        +INF             .          
+ccc.03f808cdd997cee9.Banana             1.5000         3.5542        +INF             .          
+ccc.03f808cdd997cee9.Broccoli           2.0000         5.1945        +INF             .          
+ccc.03f808cdd997cee9.Strawberry         1.0000         2.7755        +INF             .          
+ccc.551d181c465cf86f.Banana             1.5000         3.5542        +INF             .          
+ccc.551d181c465cf86f.Broccoli           2.0000         5.1945        +INF             .          
+ccc.551d181c465cf86f.Strawberry         1.0000         2.7755        +INF             .          
+ddd.03f808cdd997cee9.Banana             1.5000         3.6439        +INF             .          
+ddd.03f808cdd997cee9.Broccoli           2.0000         5.5933        +INF             .          
+ddd.03f808cdd997cee9.Strawberry         1.0000         2.8040        +INF             .          
+ddd.551d181c465cf86f.Banana             1.5000         3.6439        +INF             .          
+ddd.551d181c465cf86f.Broccoli           2.0000         5.5933        +INF             .          
+ddd.551d181c465cf86f.Strawberry         1.0000         2.8040        +INF             .          
+eee.03f808cdd997cee9.Banana             1.5000         3.2780        +INF             .          
+eee.03f808cdd997cee9.Broccoli           2.0000         2.7465        +INF             .          
+eee.03f808cdd997cee9.Strawberry         1.0000         1.9605        +INF             .          
+eee.551d181c465cf86f.Banana             1.5000         3.2780        +INF             .          
+eee.551d181c465cf86f.Broccoli           2.0000         2.7465        +INF             .          
+eee.551d181c465cf86f.Strawberry         1.0000         1.9605        +INF             .          
+
+---- EQU const20  
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+03f808cdd997cee9          .              .            +INF             .          
+551d181c465cf86f          .              .            +INF             .          
+
+---- EQU const21  constraints 20&21: controlling truck temperature
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+03f808cdd997cee9        -INF             .             4.0000          .          
+551d181c465cf86f        -INF             .             4.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR Cost              -INF          493.9543        +INF             .          
+---- VAR tCost             -INF          400.0000        +INF             .          
+---- VAR dCost             -INF           44.7936        +INF             .          
+---- VAR qCost             -INF           47.1607        +INF             .          
+---- VAR eCost             -INF             .            +INF             .          
+---- VAR lCost             -INF            2.0000        +INF             .          
+
+  Cost  total cost
+  tCost  cost for using trucks
+  dCost  cost for distance traveled
+  qCost  cost for quality lost
+  eCost  cost for arriving early
+  lCost  cost for arriving late
+
+---- VAR X  traveling from i to j using truck k
+
+                                LOWER          LEVEL          UPPER         MARGINAL
+
+DCS.DCS.03f808cdd997cee9          .              .             1.0000         EPS         
+DCS.DCS.551d181c465cf86f          .              .             1.0000         EPS         
+DCS.aaa.03f808cdd997cee9          .             1.0000         1.0000       121.0367      
+DCS.aaa.551d181c465cf86f          .              .             1.0000        14.2129      
+DCS.bbb.03f808cdd997cee9          .              .             1.0000        42.9274      
+DCS.bbb.551d181c465cf86f          .              .             1.0000        42.9274      
+DCS.ccc.03f808cdd997cee9          .              .             1.0000        10.1164      
+DCS.ccc.551d181c465cf86f          .              .             1.0000        10.1164      
+DCS.ddd.03f808cdd997cee9          .              .             1.0000        11.4921      
+DCS.ddd.551d181c465cf86f          .             1.0000         1.0000       456.4464      
+DCS.eee.03f808cdd997cee9          .              .             1.0000        10.2227      
+DCS.eee.551d181c465cf86f          .              .             1.0000        10.2227      
+DCS.DCE.03f808cdd997cee9          .              .             1.0000         EPS         
+DCS.DCE.551d181c465cf86f          .              .             1.0000         EPS         
+aaa.DCS.03f808cdd997cee9          .              .             1.0000         0.3286      
+aaa.DCS.551d181c465cf86f          .              .             1.0000         0.3286      
+aaa.aaa.03f808cdd997cee9          .              .             1.0000        13.9349      
+aaa.aaa.551d181c465cf86f          .              .             1.0000        13.9349      
+aaa.bbb.03f808cdd997cee9          .              .             1.0000        42.6493      
+aaa.bbb.551d181c465cf86f          .              .             1.0000        42.6493      
+aaa.ccc.03f808cdd997cee9          .              .             1.0000         9.8384      
+aaa.ccc.551d181c465cf86f          .              .             1.0000         9.8384      
+aaa.ddd.03f808cdd997cee9          .              .             1.0000        11.7954      
+aaa.ddd.551d181c465cf86f          .              .             1.0000        11.7954      
+aaa.eee.03f808cdd997cee9          .             1.0000         1.0000        10.5260      
+aaa.eee.551d181c465cf86f          .              .             1.0000        10.5260      
+aaa.DCE.03f808cdd997cee9          .              .             1.0000         0.3286      
+aaa.DCE.551d181c465cf86f          .              .             1.0000         0.3286      
+bbb.DCS.03f808cdd997cee9          .              .             1.0000         1.8453      
+bbb.DCS.551d181c465cf86f          .              .             1.0000         1.8453      
+bbb.aaa.03f808cdd997cee9          .              .             1.0000        15.4516      
+bbb.aaa.551d181c465cf86f          .              .             1.0000        15.4516      
+bbb.bbb.03f808cdd997cee9          .              .             1.0000        40.7282      
+bbb.bbb.551d181c465cf86f          .              .             1.0000        40.7282      
+bbb.ccc.03f808cdd997cee9          .              .             1.0000         8.7009      
+bbb.ccc.551d181c465cf86f          .              .             1.0000         8.7009      
+bbb.ddd.03f808cdd997cee9          .              .             1.0000        13.1604      
+bbb.ddd.551d181c465cf86f          .              .             1.0000        13.1604      
+bbb.eee.03f808cdd997cee9          .              .             1.0000        11.8404      
+bbb.eee.551d181c465cf86f          .              .             1.0000        11.8404      
+bbb.DCE.03f808cdd997cee9          .              .             1.0000         1.8453      
+bbb.DCE.551d181c465cf86f          .             1.0000         1.0000         1.8453      
+ccc.DCS.03f808cdd997cee9          .              .             1.0000         2.3761      
+ccc.DCS.551d181c465cf86f          .              .             1.0000         2.3761      
+ccc.aaa.03f808cdd997cee9          .              .             1.0000        15.9824      
+ccc.aaa.551d181c465cf86f          .              .             1.0000        15.9824      
+ccc.bbb.03f808cdd997cee9          .              .             1.0000        42.5229      
+ccc.bbb.551d181c465cf86f          .             1.0000         1.0000        42.5229      
+ccc.ccc.03f808cdd997cee9          .              .             1.0000         7.9173      
+ccc.ccc.551d181c465cf86f          .              .             1.0000         7.9173      
+ccc.ddd.03f808cdd997cee9          .              .             1.0000        12.3768      
+ccc.ddd.551d181c465cf86f          .              .             1.0000        12.3768      
+ccc.eee.03f808cdd997cee9          .              .             1.0000        12.5735      
+ccc.eee.551d181c465cf86f          .              .             1.0000        12.5735      
+ccc.DCE.03f808cdd997cee9          .              .             1.0000         2.3761      
+ccc.DCE.551d181c465cf86f          .              .             1.0000         2.3761      
+ddd.DCS.03f808cdd997cee9          .              .             1.0000         2.3003      
+ddd.DCS.551d181c465cf86f          .              .             1.0000         2.3003      
+ddd.aaa.03f808cdd997cee9          .              .             1.0000        16.5132      
+ddd.aaa.551d181c465cf86f          .              .             1.0000        16.5132      
+ddd.bbb.03f808cdd997cee9          .              .             1.0000        44.5199      
+ddd.bbb.551d181c465cf86f          .              .             1.0000        44.5199      
+ddd.ccc.03f808cdd997cee9          .              .             1.0000        10.7736      
+ddd.ccc.551d181c465cf86f          .             1.0000         1.0000        81.7697      
+ddd.ddd.03f808cdd997cee9          .              .             1.0000         9.1918      
+ddd.ddd.551d181c465cf86f          .              .             1.0000         9.1918      
+ddd.eee.03f808cdd997cee9          .              .             1.0000        11.5624      
+ddd.eee.551d181c465cf86f          .              .             1.0000        11.5624      
+ddd.DCE.03f808cdd997cee9          .              .             1.0000         2.3003      
+ddd.DCE.551d181c465cf86f          .              .             1.0000         2.3003      
+eee.DCS.03f808cdd997cee9          .              .             1.0000         0.5814      
+eee.DCS.551d181c465cf86f          .              .             1.0000         0.5814      
+eee.aaa.03f808cdd997cee9          .              .             1.0000        14.7943      
+eee.aaa.551d181c465cf86f          .              .             1.0000        14.7943      
+eee.bbb.03f808cdd997cee9          .              .             1.0000        42.3460      
+eee.bbb.551d181c465cf86f          .              .             1.0000        42.3460      
+eee.ccc.03f808cdd997cee9          .              .             1.0000        10.6978      
+eee.ccc.551d181c465cf86f          .              .             1.0000        10.6978      
+eee.ddd.03f808cdd997cee9          .              .             1.0000        11.1382      
+eee.ddd.551d181c465cf86f          .              .             1.0000        11.1382      
+eee.eee.03f808cdd997cee9          .              .             1.0000         9.3885      
+eee.eee.551d181c465cf86f          .              .             1.0000         9.3885      
+eee.DCE.03f808cdd997cee9          .             1.0000         1.0000         0.5814      
+eee.DCE.551d181c465cf86f          .              .             1.0000         0.5814      
+DCE.DCS.03f808cdd997cee9          .              .             1.0000         EPS         
+DCE.DCS.551d181c465cf86f          .              .             1.0000         EPS         
+DCE.aaa.03f808cdd997cee9          .              .             1.0000        14.2129      
+DCE.aaa.551d181c465cf86f          .              .             1.0000        14.2129      
+DCE.bbb.03f808cdd997cee9          .              .             1.0000        42.9274      
+DCE.bbb.551d181c465cf86f          .              .             1.0000        42.9274      
+DCE.ccc.03f808cdd997cee9          .              .             1.0000        10.1164      
+DCE.ccc.551d181c465cf86f          .              .             1.0000        10.1164      
+DCE.ddd.03f808cdd997cee9          .              .             1.0000        11.4921      
+DCE.ddd.551d181c465cf86f          .              .             1.0000        11.4921      
+DCE.eee.03f808cdd997cee9          .              .             1.0000        10.2227      
+DCE.eee.551d181c465cf86f          .              .             1.0000        10.2227      
+DCE.DCE.03f808cdd997cee9          .              .             1.0000         EPS         
+DCE.DCE.551d181c465cf86f          .              .             1.0000         EPS         
+
+---- VAR Y  using truck k
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+03f808cdd997cee9          .             1.0000         1.0000       200.0000      
+551d181c465cf86f          .             1.0000         1.0000       200.0000      
+
+---- VAR E  arriving early at location j
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+DCS          .              .             1.0000         EPS         
+aaa          .              .             1.0000        -0.0794      
+bbb          .              .             1.0000      -312.0000      
+ccc          .              .             1.0000        -6.6733      
+ddd          .              .             1.0000        -0.6572      
+eee          .              .             1.0000      -312.0000      
+DCE          .              .             1.0000         EPS         
+
+---- VAR Q  arriving on time at location j
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+DCS          .             1.0000         1.0000         EPS         
+aaa          .             1.0000         1.0000         EPS         
+bbb          .              .             1.0000         EPS         
+ccc          .             1.0000         1.0000         EPS         
+ddd          .             1.0000         1.0000         EPS         
+eee          .              .             1.0000         EPS         
+DCE          .              .             1.0000         EPS         
+
+---- VAR T  arriving late at location j
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+DCS          .              .             1.0000         EPS         
+aaa          .              .             1.0000      -116.9694      
+bbb          .             1.0000         1.0000      1247.5094      
+ccc          .              .             1.0000      -115.9333      
+ddd          .              .             1.0000      -117.7472      
+eee          .             1.0000         1.0000      1026.0252      
+DCE          .             1.0000         1.0000         EPS         
+
+---- VAR A  arrival time at location j
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+DCS          .              .            +INF             .          
+aaa          .             0.0031        +INF             .          
+bbb          .            12.0000        +INF             .          
+ccc          .             0.2567        +INF             .          
+ddd          .             0.0253        +INF             .          
+eee          .            12.0000        +INF             .          
+DCE          .           100.0000        +INF             .          
+
+---- VAR rank  for subtour constraint
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+DCS          .              .           100.0000         EPS         
+aaa          .             1.0000       100.0000         1.8922      
+bbb          .             3.0000       100.0000         0.2816      
+ccc          .             2.0000       100.0000         0.8035      
+ddd          .             1.0000       100.0000         1.0881      
+eee          .             2.0000       100.0000         0.2832      
+DCE          .            94.0000       100.0000         EPS         
+
+---- VAR temp  temperature of truck k
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+03f808cdd997cee9          .              .           100.0000         2.1927      
+551d181c465cf86f          .              .           100.0000         2.2734      
+
+---- VAR SL  shelf life of product b at customer j
+
+                                       LOWER          LEVEL          UPPER         MARGINAL
+
+DCS.03f808cdd997cee9.Banana              .             3.7306        +INF             .          
+DCS.03f808cdd997cee9.Broccoli            .             5.9557        +INF             .          
+DCS.03f808cdd997cee9.Strawberry          .             2.8156        +INF             .          
+DCS.551d181c465cf86f.Banana              .             3.7306        +INF             .          
+DCS.551d181c465cf86f.Broccoli            .             5.9557        +INF             .          
+DCS.551d181c465cf86f.Strawberry          .             2.8156        +INF             .          
+aaa.03f808cdd997cee9.Banana              .             3.6445        +INF             .          
+aaa.03f808cdd997cee9.Broccoli            .             5.6001        +INF             .          
+aaa.03f808cdd997cee9.Strawberry          .             2.8059        +INF             .          
+aaa.551d181c465cf86f.Banana              .             3.6445        +INF             .          
+aaa.551d181c465cf86f.Broccoli            .             5.6001        +INF             .          
+aaa.551d181c465cf86f.Strawberry          .             2.8059        +INF             .          
+bbb.03f808cdd997cee9.Banana              .             3.2023        +INF             .          
+bbb.03f808cdd997cee9.Broccoli            .             2.5829        +INF             .          
+bbb.03f808cdd997cee9.Strawberry          .             1.9538        +INF             .          
+bbb.551d181c465cf86f.Banana              .             3.2023        +INF             .          
+bbb.551d181c465cf86f.Broccoli            .             2.5829        +INF             .          
+bbb.551d181c465cf86f.Strawberry          .             1.9538        +INF             .          
+ccc.03f808cdd997cee9.Banana              .             3.5542        +INF             .          
+ccc.03f808cdd997cee9.Broccoli            .             5.1945        +INF             .          
+ccc.03f808cdd997cee9.Strawberry          .             2.7755        +INF             .          
+ccc.551d181c465cf86f.Banana              .             3.5542        +INF             .          
+ccc.551d181c465cf86f.Broccoli            .             5.1945        +INF             .          
+ccc.551d181c465cf86f.Strawberry          .             2.7755        +INF             .          
+ddd.03f808cdd997cee9.Banana              .             3.6439        +INF             .          
+ddd.03f808cdd997cee9.Broccoli            .             5.5933        +INF             .          
+ddd.03f808cdd997cee9.Strawberry          .             2.8040        +INF             .          
+ddd.551d181c465cf86f.Banana              .             3.6439        +INF             .          
+ddd.551d181c465cf86f.Broccoli            .             5.5933        +INF             .          
+ddd.551d181c465cf86f.Strawberry          .             2.8040        +INF             .          
+eee.03f808cdd997cee9.Banana              .             3.2780        +INF             .          
+eee.03f808cdd997cee9.Broccoli            .             2.7465        +INF             .          
+eee.03f808cdd997cee9.Strawberry          .             1.9605        +INF             .          
+eee.551d181c465cf86f.Banana              .             3.2780        +INF             .          
+eee.551d181c465cf86f.Broccoli            .             2.7465        +INF             .          
+eee.551d181c465cf86f.Strawberry          .             1.9605        +INF             .          
+DCE.03f808cdd997cee9.Banana              .             0.2088        +INF             .          
+DCE.03f808cdd997cee9.Broccoli            .       8.1472756E-5        +INF             .          
+DCE.03f808cdd997cee9.Strawberry          .             0.1061        +INF             .          
+DCE.551d181c465cf86f.Banana              .             0.2088        +INF             .          
+DCE.551d181c465cf86f.Broccoli            .       8.1472756E-5        +INF             .          
+DCE.551d181c465cf86f.Strawberry          .             0.1061        +INF             .          
+
+---- VAR rg  refrigeration cost of truck k
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+03f808cdd997cee9          .            14.0000        +INF             .          
+551d181c465cf86f          .            14.0000        +INF             .          
+
+---- VAR C  cost of traveling from i to j using truck k
+
+                                LOWER          LEVEL          UPPER         MARGINAL
+
+DCS.DCS.03f808cdd997cee9          .              .            +INF             .          
+DCS.DCS.551d181c465cf86f          .              .            +INF             .          
+DCS.aaa.03f808cdd997cee9          .            12.2781        +INF             .          
+DCS.aaa.551d181c465cf86f          .            12.2781        +INF             .          
+DCS.bbb.03f808cdd997cee9          .             6.1992        +INF             .          
+DCS.bbb.551d181c465cf86f          .             6.1992        +INF             .          
+DCS.ccc.03f808cdd997cee9          .             8.1992        +INF             .          
+DCS.ccc.551d181c465cf86f          .             8.1992        +INF             .          
+DCS.ddd.03f808cdd997cee9          .            10.3003        +INF             .          
+DCS.ddd.551d181c465cf86f          .            10.3003        +INF             .          
+DCS.eee.03f808cdd997cee9          .             4.8342        +INF             .          
+DCS.eee.551d181c465cf86f          .             4.8342        +INF             .          
+DCS.DCE.03f808cdd997cee9          .              .            +INF             .          
+DCS.DCE.551d181c465cf86f          .              .            +INF             .          
+aaa.DCS.03f808cdd997cee9          .             0.3286        +INF             .          
+aaa.DCS.551d181c465cf86f          .             0.3286        +INF             .          
+aaa.aaa.03f808cdd997cee9          .            12.0000        +INF             .          
+aaa.aaa.551d181c465cf86f          .            12.0000        +INF             .          
+aaa.bbb.03f808cdd997cee9          .             5.9211        +INF             .          
+aaa.bbb.551d181c465cf86f          .             5.9211        +INF             .          
+aaa.ccc.03f808cdd997cee9          .             7.9211        +INF             .          
+aaa.ccc.551d181c465cf86f          .             7.9211        +INF             .          
+aaa.ddd.03f808cdd997cee9          .            10.6036        +INF             .          
+aaa.ddd.551d181c465cf86f          .            10.6036        +INF             .          
+aaa.eee.03f808cdd997cee9          .             5.1375        +INF             .          
+aaa.eee.551d181c465cf86f          .             5.1375        +INF             .          
+aaa.DCE.03f808cdd997cee9          .             0.3286        +INF             .          
+aaa.DCE.551d181c465cf86f          .             0.3286        +INF             .          
+bbb.DCS.03f808cdd997cee9          .             1.8453        +INF             .          
+bbb.DCS.551d181c465cf86f          .             1.8453        +INF             .          
+bbb.aaa.03f808cdd997cee9          .            13.5167        +INF             .          
+bbb.aaa.551d181c465cf86f          .            13.5167        +INF             .          
+bbb.bbb.03f808cdd997cee9          .             4.0000        +INF             .          
+bbb.bbb.551d181c465cf86f          .             4.0000        +INF             .          
+bbb.ccc.03f808cdd997cee9          .             6.7836        +INF             .          
+bbb.ccc.551d181c465cf86f          .             6.7836        +INF             .          
+bbb.ddd.03f808cdd997cee9          .            11.9686        +INF             .          
+bbb.ddd.551d181c465cf86f          .            11.9686        +INF             .          
+bbb.eee.03f808cdd997cee9          .             6.4519        +INF             .          
+bbb.eee.551d181c465cf86f          .             6.4519        +INF             .          
+bbb.DCE.03f808cdd997cee9          .             1.8453        +INF             .          
+bbb.DCE.551d181c465cf86f          .             1.8453        +INF             .          
+ccc.DCS.03f808cdd997cee9          .             2.3761        +INF             .          
+ccc.DCS.551d181c465cf86f          .             2.3761        +INF             .          
+ccc.aaa.03f808cdd997cee9          .            14.0475        +INF             .          
+ccc.aaa.551d181c465cf86f          .            14.0475        +INF             .          
+ccc.bbb.03f808cdd997cee9          .             5.7947        +INF             .          
+ccc.bbb.551d181c465cf86f          .             5.7947        +INF             .          
+ccc.ccc.03f808cdd997cee9          .             6.0000        +INF             .          
+ccc.ccc.551d181c465cf86f          .             6.0000        +INF             .          
+ccc.ddd.03f808cdd997cee9          .            11.1850        +INF             .          
+ccc.ddd.551d181c465cf86f          .            11.1850        +INF             .          
+ccc.eee.03f808cdd997cee9          .             7.1850        +INF             .          
+ccc.eee.551d181c465cf86f          .             7.1850        +INF             .          
+ccc.DCE.03f808cdd997cee9          .             2.3761        +INF             .          
+ccc.DCE.551d181c465cf86f          .             2.3761        +INF             .          
+ddd.DCS.03f808cdd997cee9          .             2.3003        +INF             .          
+ddd.DCS.551d181c465cf86f          .             2.3003        +INF             .          
+ddd.aaa.03f808cdd997cee9          .            14.5783        +INF             .          
+ddd.aaa.551d181c465cf86f          .            14.5783        +INF             .          
+ddd.bbb.03f808cdd997cee9          .             7.7917        +INF             .          
+ddd.bbb.551d181c465cf86f          .             7.7917        +INF             .          
+ddd.ccc.03f808cdd997cee9          .             8.8564        +INF             .          
+ddd.ccc.551d181c465cf86f          .             8.8564        +INF             .          
+ddd.ddd.03f808cdd997cee9          .             8.0000        +INF             .          
+ddd.ddd.551d181c465cf86f          .             8.0000        +INF             .          
+ddd.eee.03f808cdd997cee9          .             6.1739        +INF             .          
+ddd.eee.551d181c465cf86f          .             6.1739        +INF             .          
+ddd.DCE.03f808cdd997cee9          .             2.3003        +INF             .          
+ddd.DCE.551d181c465cf86f          .             2.3003        +INF             .          
+eee.DCS.03f808cdd997cee9          .             0.5814        +INF             .          
+eee.DCS.551d181c465cf86f          .             0.5814        +INF             .          
+eee.aaa.03f808cdd997cee9          .            12.8594        +INF             .          
+eee.aaa.551d181c465cf86f          .            12.8594        +INF             .          
+eee.bbb.03f808cdd997cee9          .             5.6178        +INF             .          
+eee.bbb.551d181c465cf86f          .             5.6178        +INF             .          
+eee.ccc.03f808cdd997cee9          .             8.7806        +INF             .          
+eee.ccc.551d181c465cf86f          .             8.7806        +INF             .          
+eee.ddd.03f808cdd997cee9          .             9.9464        +INF             .          
+eee.ddd.551d181c465cf86f          .             9.9464        +INF             .          
+eee.eee.03f808cdd997cee9          .             4.0000        +INF             .          
+eee.eee.551d181c465cf86f          .             4.0000        +INF             .          
+eee.DCE.03f808cdd997cee9          .             0.5814        +INF             .          
+eee.DCE.551d181c465cf86f          .             0.5814        +INF             .          
+DCE.DCS.03f808cdd997cee9          .              .            +INF             .          
+DCE.DCS.551d181c465cf86f          .              .            +INF             .          
+DCE.aaa.03f808cdd997cee9          .            12.2781        +INF             .          
+DCE.aaa.551d181c465cf86f          .            12.2781        +INF             .          
+DCE.bbb.03f808cdd997cee9          .             6.1992        +INF             .          
+DCE.bbb.551d181c465cf86f          .             6.1992        +INF             .          
+DCE.ccc.03f808cdd997cee9          .             8.1992        +INF             .          
+DCE.ccc.551d181c465cf86f          .             8.1992        +INF             .          
+DCE.ddd.03f808cdd997cee9          .            10.3003        +INF             .          
+DCE.ddd.551d181c465cf86f          .            10.3003        +INF             .          
+DCE.eee.03f808cdd997cee9          .             4.8342        +INF             .          
+DCE.eee.551d181c465cf86f          .             4.8342        +INF             .          
+DCE.DCE.03f808cdd997cee9          .              .            +INF             .          
+DCE.DCE.551d181c465cf86f          .              .            +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows - 10/31/20 00:22:10 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    165 VARIABLE X.L  traveling from i to j using truck k
+
+         03f808cdd~  551d181c4~
+
+DCS.aaa       1.000
+DCS.ddd                   1.000
+aaa.eee       1.000
+bbb.DCE                   1.000
+ccc.bbb                   1.000
+ddd.ccc                   1.000
+eee.DCE       1.000
+
+
+----    165 VARIABLE Y.L  using truck k
+
+03f808cdd997cee9 1.000,    551d181c465cf86f 1.000
+
+
+----    165 VARIABLE temp.L  temperature of truck k
+
+                      ( ALL       0.000 )
+
+
+----    165 VARIABLE A.L  arrival time at location j
+
+aaa   0.003,    bbb  12.000,    ccc   0.257,    ddd   0.025,    eee  12.000,    DCE 100.000
+
+
+----    165 VARIABLE E.L  arriving early at location j
+
+                      ( ALL       0.000 )
+
+
+----    165 VARIABLE T.L  arriving late at location j
+
+bbb 1.000,    eee 1.000,    DCE 1.000
+
+
+----    165 VARIABLE rank.L  for subtour constraint
+
+aaa  1.000,    bbb  3.000,    ccc  2.000,    ddd  1.000,    eee  2.000,    DCE 94.000
+
+
+----    165 VARIABLE SL.L  shelf life of product b at customer j
+
+                          Banana    Broccoli  Strawberry
+
+DCS.03f808cdd997cee9       3.731       5.956       2.816
+DCS.551d181c465cf86f       3.731       5.956       2.816
+aaa.03f808cdd997cee9       3.644       5.600       2.806
+aaa.551d181c465cf86f       3.644       5.600       2.806
+bbb.03f808cdd997cee9       3.202       2.583       1.954
+bbb.551d181c465cf86f       3.202       2.583       1.954
+ccc.03f808cdd997cee9       3.554       5.195       2.775
+ccc.551d181c465cf86f       3.554       5.195       2.775
+ddd.03f808cdd997cee9       3.644       5.593       2.804
+ddd.551d181c465cf86f       3.644       5.593       2.804
+eee.03f808cdd997cee9       3.278       2.746       1.960
+eee.551d181c465cf86f       3.278       2.746       1.960
+DCE.03f808cdd997cee9       0.209 8.147276E-5       0.106
+DCE.551d181c465cf86f       0.209 8.147276E-5       0.106
+
+
+----    166 VARIABLE Cost.L                =      493.954  total cost
+            VARIABLE tCost.L               =      400.000  cost for using trucks
+            VARIABLE dCost.L               =       44.794  cost for distance traveled
+            VARIABLE qCost.L               =       47.161  cost for quality lost
+            VARIABLE eCost.L               =        0.000  cost for arriving early
+            VARIABLE lCost.L               =        2.000  cost for arriving late
+
+
+EXECUTION TIME       =        1.157 SECONDS      3 MB  31.1.1 r4b06116 WEX-WEI
+
+
+USER: Small MUD - 5 User License                     S200423/0001AO-WIN
+      American University of Sharjah, Department of Electrical EDC12122
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-multi-vartemp-model.gms
+Output     D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-multi-vartemp-model.lst

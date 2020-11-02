@@ -1,0 +1,32 @@
+dset=i     rng=i!A2      cDim=1
+dset=subi  rng=subi!A2   cDim=1
+dset=sub2i rng=sub2i!A2  cDim=1
+dset=subj  rng=subj!A2   cDim=1
+dset=sub2j rng=sub2j!A2  cDim=1
+dset=k     rng=k!A2      cDim=1
+dset=b     rng=b!A2      cDim=1
+par=S      rng=S!A2      rDim=1  cDim=1
+par=D      rng=D!A2      rDim=1  cDim=1
+par=L      rng=L!A2      cDim=1
+par=U      rng=U!A2      cDim=1
+par=MSL    rng=MSL!A2    cDim=1
+par=minSL  rng=minSL!A2  cDim=1
+par=alpha  rng=alpha!A2  cDim=1
+par=beta   rng=beta!A2   cDim=1
+par=gamma  rng=gamma!A2  cDim=1
+par=P      rng=P!A2      cDim=1
+par=N      rng=N!A2      dim=0
+par=W      rng=W!A2      dim=0
+par=Lk     rng=Lk!A2     dim=0
+par=M      rng=M!A2      dim=0
+par=fm     rng=fm!A2     dim=0
+par=fi     rng=fi!A2     dim=0
+par=v      rng=v!A2      dim=0
+par=z      rng=z!A2      dim=0
+par=R      rng=R!A2      dim=0
+par=EXP    rng=EXP!A2    dim=0
+par=maxTemp       rng=maxTemp!A2       dim=0
+par=minTemp       rng=minTemp!A2       dim=0
+par=maxTempCost   rng=maxTempCost!A2   dim=0
+par=costPerDegree rng=costPerDegree!A2 dim=0
+MaxDupeErrors = 100

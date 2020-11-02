@@ -1,0 +1,461 @@
+--- Job A-n9-k3-multi-vartemp-model.gms Start 10/30/20 23:57:51 31.1.1 r4b06116 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\win64\31.1\gmsprmNT.txt
+--- GAMS Parameters defined
+    Input D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-multi-vartemp-model.gms
+    PageSize 0
+    ScrDir D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225r\
+    SysDir C:\GAMS\win64\31.1\
+    LogOption 3
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+GAMS 31.1.1   Copyright (C) 1987-2020 GAMS Development. All rights reserved
+Licensee: Small MUD - 5 User License                     S200423/0001AO-WIN
+          American University of Sharjah, Department of Electrical EDC12122
+          C:\Users\ahmed\Documents\GAMS\gamslice.txt
+--- Starting compilation
+--- A-n9-k3-multi-vartemp-model.gms(36) 2 Mb
+--- call gdxxrw A-n9-k3-input-multi-vartemp.xlsx @howToRead.txt
+
+GDXXRW           31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+Input file : D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-input-multi-vartemp.xlsx
+Output file: D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9
+Output file: D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-input-multi-vartemp.gdx
+Total time = 921 Ms
+--- A-n9-k3-multi-vartemp-model.gms(37) 2 Mb
+--- GDXin=D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-input-multi-vartemp.gdx
+--- A-n9-k3-multi-vartemp-model.gms(182) 3 Mb
+--- Starting execution: elapsed 0:00:01.018
+--- A-n9-k3-multi-vartemp-model.gms(1) 4 Mb
+--- Generating MINLP model simple
+--- A-n9-k3-multi-vartemp-model.gms(164) 6 Mb
+---   394 rows  285 columns  1,566 non-zeroes
+---   1,598 nl-code  426 nl-non-zeroes
+---   130 discrete-columns
+***
+***   9 Integer +INF Bounds have been reset to 100 (see Option IntVarUp)
+***
+--- A-n9-k3-multi-vartemp-model.gms(164) 4 Mb
+--- Executing DICOPT: elapsed 0:00:01.044
+-------------------------------------------------------------------------------
+Dicopt 2         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+-------------------------------------------------------------------------------
+by Aldo Vecchietti, Director del Instituto INGAR,
+   CONICET, UTN, Santa Fe, Argentina
+by Ignacio E. Grossmann, Chemical Engineering Faculty,
+   Carnegie Mellon University, Pittsburgh, PA, USA
+-------------------------------------------------------------------------------
+*** This solver runs with a community license.
+--- DICOPT: Starting major iteration 1
+--- DICOPT: Setting up first (relaxed) NLP.
+CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+*** This solver runs with a community license.
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        5.7625541407E+02 (Input point)
+ 
+                   Pre-triangular equations:   10
+                   Post-triangular equations:  123
+                   Definitional equations:     30
+ 
+      1   0        4.5000000000E+01 (After pre-processing)
+      2   0        2.0500000000E+01 (After scaling)
+ 
+ ** Feasible solution. Value of objective =    196.161103400
+ 
+   Iter Phase Ninf     Objective     RGmax    NSB   Step InItr MX OK
+      6   3       -3.6415020130E+02 3.9E+02     4 1.0E+00    2 T  T
+     11   3       -4.4993891456E+02 0.0E+00     9
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+--- DICOPT: Setting up first MIP
+
+IBM ILOG CPLEX   31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.10.0.0
+
+Reading data...
+Starting Cplex...
+Unable to load names.
+Version identifier: 12.10.0.0 | 2019-11-26 | 843d4de2ae
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 1
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_Simplex_Limits_Iterations               1999999989
+CPXPARAM_TimeLimit                               999.98400000000004
+CPXPARAM_Tune_TimeLimit                          199.99680000000001
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+CPXPARAM_WorkDir                                 "D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225r\"
+Tried aggregator 1 time.
+MIP Presolve eliminated 213 rows and 261 columns.
+MIP Presolve modified 138 coefficients.
+Reduced MIP has 182 rows, 117 columns, and 749 nonzeros.
+Reduced MIP has 77 binaries, 7 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.72 ticks)
+Probing fixed 5 vars, tightened 0 bounds.
+Probing time = 0.00 sec. (0.51 ticks)
+Cover probing fixed 0 vars, tightened 20 bounds.
+Tried aggregator 2 times.
+Detecting symmetries...
+MIP Presolve eliminated 41 rows and 7 columns.
+MIP Presolve modified 78 coefficients.
+Aggregator did 3 substitutions.
+Reduced MIP has 138 rows, 107 columns, and 656 nonzeros.
+Reduced MIP has 67 binaries, 7 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.71 ticks)
+Probing time = 0.00 sec. (0.40 ticks)
+Cover probing fixed 0 vars, tightened 3 bounds.
+Clique table members: 417.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+LP Presolve eliminated 6 rows and 2 columns.
+Reduced LP has 132 rows, 105 columns, and 630 nonzeros.
+Presolve time = 0.00 sec. (0.09 ticks)
+
+Iteration log . . .
+Iteration:     1   Scaled dual infeas =           110.048579
+Iteration:    15   Dual objective     =          -445.386051
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.00 sec. (0.48 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0      372.4814    13                    372.4814       56         
+      0     0      549.5799    13                    Cuts: 18       69         
+      0     0      549.6099    13                    Cuts: 22       89         
+      0     0      549.6225    13                    Cuts: 35      116         
+      0     0      549.6378    13                    Cuts: 50      145         
+      0     0      550.0361    13                    Cuts: 22      180         
+      0     0      551.0891    13                    Cuts: 35      219         
+      0     0      551.3352    13                    Cuts: 28      243         
+      0     0      551.4749    13                    Cuts: 28      251         
+      0     0      551.5583    13                    Cuts: 24      257         
+*     0+    0                         2366.6239      551.5583            76.69%
+Found incumbent of value 2366.623889 after 0.03 sec. (15.35 ticks)
+      0     0      551.5782    13     2366.6239      Cuts: 13      266   76.69%
+*     0+    0                         2366.6239      551.5782            76.69%
+Found incumbent of value 2366.623886 after 0.03 sec. (19.94 ticks)
+      0     0  -1.00000e+75     0     2366.6239      551.5782      266   76.69%
+      0     2      551.5782    33     2366.6239      551.5880      266   76.69%
+Elapsed time = 0.03 sec. (20.14 ticks, tree = 0.01 MB, solutions = 2)
+*    10+    9                          822.3334      551.6766            32.91%
+Found incumbent of value 822.333352 after 0.03 sec. (22.53 ticks)
+*    10+    9                          600.6861      551.6766             8.16%
+Found incumbent of value 600.686097 after 0.03 sec. (22.82 ticks)
+*    30+   11                          599.3403      551.8156             7.93%
+                                                      Cuts: 4                  
+Found incumbent of value 599.340343 after 0.03 sec. (27.57 ticks)
+*    70    27      integral     0      598.9989      552.1638      828    7.82%
+                                                      Cuts: 4                  
+Found incumbent of value 598.998856 after 0.05 sec. (34.48 ticks)
+*    80    28      integral     0      579.8068      552.2124      899    4.76%
+                                                      Cuts: 2                  
+Found incumbent of value 579.806826 after 0.05 sec. (36.10 ticks)
+*   170+   19                          576.9746      559.6675             3.00%
+                                                      Cuts: 9                  
+Found incumbent of value 576.974629 after 0.06 sec. (49.07 ticks)
+*   179    16      integral     0      576.5757      560.4856     1449    2.79%
+Found incumbent of value 576.575725 after 0.06 sec. (50.27 ticks)
+
+Clique cuts applied:  7
+Cover cuts applied:  6
+Implied bound cuts applied:  2
+Flow cuts applied:  2
+Mixed integer rounding cuts applied:  34
+Zero-half cuts applied:  27
+Multi commodity flow cuts applied:  10
+Gomory fractional cuts applied:  3
+
+Root node processing (before b&c):
+  Real time             =    0.03 sec. (20.17 ticks)
+Sequential b&c:
+  Real time             =    0.03 sec. (32.35 ticks)
+                          ------------
+Total (root+branch&cut) =    0.06 sec. (52.52 ticks)
+MIP status(101): integer optimal solution
+Cplex Time: 0.06sec (det. 52.52 ticks)
+Fixing integer variables, and solving final LP...
+Version identifier: 12.10.0.0 | 2019-11-26 | 843d4de2ae
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_Simplex_Limits_Iterations               1999999989
+CPXPARAM_TimeLimit                               999.98400000000004
+CPXPARAM_Tune_TimeLimit                          199.99680000000001
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+CPXPARAM_WorkDir                                 "D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225r\"
+Tried aggregator 1 time.
+LP Presolve eliminated 393 rows and 373 columns.
+Reduced LP has 2 rows, 5 columns, and 6 nonzeros.
+Presolve time = 0.00 sec. (0.20 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual infeasibility =             2.098812
+Iteration:     3   Dual objective     =           576.575725
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.36 ticks)
+
+Proven optimal solution.
+
+MIP Solution:          576.575725    (1540 iterations, 206 nodes)
+Final Solve:           576.575725    (3 iterations)
+
+Best possible:         576.575725
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Starting major iteration 2
+--- DICOPT: Setting up next NLP
+CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+*** This solver runs with a community license.
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        2.0697716695E+01 (Input point)
+ 
+                   Pre-triangular equations:   238
+                   Post-triangular equations:  30
+                   Definitional equations:     30
+ 
+      1   0        4.4408920985E-16 (After pre-processing)
+      2   0        2.2204460493E-16 (After scaling)
+ 
+ ** Feasible solution. Value of objective =    550.621536037
+ 
+   Iter Phase Ninf     Objective     RGmax    NSB   Step InItr MX OK
+      4   3        4.9029359211E+02 0.0E+00     0
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+--- DICOPT: Checking convergence
+--- DICOPT: Setting up next MIP
+--- GMO Resort Time 0ms
+--- DICOPT: Log File:
+ Major Major     Objective    CPU time  Itera- Evaluation Solver
+ Step  Iter       Function     (Sec)    tions   Errors
+  NLP    1      -449.93891      0.02       11      0      conopt
+  MIP    1       576.57573      0.08     1543      0      cplex
+  NLP    2       490.29359<     0.00        4      0      conopt
+
+IBM ILOG CPLEX   31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.10.0.0
+
+Reading data...
+Starting Cplex...
+Unable to load names.
+Version identifier: 12.10.0.0 | 2019-11-26 | 843d4de2ae
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 1
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_Simplex_Limits_Iterations               1999998442
+CPXPARAM_TimeLimit                               999.90600000000006
+CPXPARAM_Tune_TimeLimit                          199.9812
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+CPXPARAM_WorkDir                                 "D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225r\"
+Tried aggregator 2 times.
+MIP Presolve eliminated 217 rows and 305 columns.
+MIP Presolve modified 417 coefficients.
+Aggregator did 24 substitutions.
+Reduced MIP has 216 rows, 156 columns, and 1042 nonzeros.
+Reduced MIP has 85 binaries, 8 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (2.08 ticks)
+Probing fixed 8 vars, tightened 0 bounds.
+Probing time = 0.00 sec. (0.66 ticks)
+Cover probing fixed 0 vars, tightened 20 bounds.
+Tried aggregator 2 times.
+MIP Presolve eliminated 40 rows and 17 columns.
+MIP Presolve modified 78 coefficients.
+Aggregator did 3 substitutions.
+Reduced MIP has 173 rows, 136 columns, and 929 nonzeros.
+Reduced MIP has 70 binaries, 8 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (1.45 ticks)
+Probing fixed 0 vars, tightened 6 bounds.
+Probing time = 0.00 sec. (0.50 ticks)
+Cover probing fixed 0 vars, tightened 3 bounds.
+Tried aggregator 1 time.
+Detecting symmetries...
+MIP Presolve eliminated 6 rows and 0 columns.
+MIP Presolve modified 59 coefficients.
+Reduced MIP has 167 rows, 136 columns, and 917 nonzeros.
+Reduced MIP has 70 binaries, 8 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.58 ticks)
+Probing time = 0.00 sec. (0.48 ticks)
+Clique table members: 452.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+LP Presolve eliminated 1 rows and 8 columns.
+Aggregator did 3 substitutions.
+Reduced LP has 163 rows, 125 columns, and 902 nonzeros.
+Presolve time = 0.00 sec. (0.16 ticks)
+
+Iteration log . . .
+Iteration:     1   Scaled dual infeas =           161.000000
+Iteration:    25   Dual objective     =          -416.893924
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.00 sec. (0.71 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0      397.1820    17                    397.1820       64         
+      0     0      566.9515    17                    Cuts: 29       91         
+      0     0      566.9815    17                    Cuts: 23      110         
+      0     0      567.0009    17                    Cuts: 26      129         
+      0     0      567.0013    17                    Cuts: 17      137         
+      0     0      567.0121    17                    Cuts: 29      163         
+Detecting symmetries...
+*     0+    0                      1985554.5094      567.0121            99.97%
+Found incumbent of value 1985554.509368 after 0.03 sec. (20.98 ticks)
+Detecting symmetries...
+      0     2      567.0121    14  1985554.5094      567.0121      163   99.97%
+Elapsed time = 0.03 sec. (21.49 ticks, tree = 0.01 MB, solutions = 1)
+*     6     4      integral     0      616.3688      567.0121      213    8.01%
+Found incumbent of value 616.368783 after 0.03 sec. (22.43 ticks)
+*    20+   13                          594.3462      567.3626             4.54%
+                                                    Covers: 1                  
+Found incumbent of value 594.346187 after 0.03 sec. (27.69 ticks)
+*   152    38      integral     0      593.9457      572.4104     1504    3.63%
+                                                      Cuts: 6                  
+Found incumbent of value 593.945652 after 0.06 sec. (55.93 ticks)
+*   221     0      integral     0      593.9457      593.9457     1924    0.00%
+Found incumbent of value 593.945652 after 0.08 sec. (65.64 ticks)
+
+Clique cuts applied:  10
+Cover cuts applied:  5
+Implied bound cuts applied:  2
+Mixed integer rounding cuts applied:  30
+Zero-half cuts applied:  38
+Multi commodity flow cuts applied:  3
+Gomory fractional cuts applied:  3
+
+Root node processing (before b&c):
+  Real time             =    0.03 sec. (21.51 ticks)
+Sequential b&c:
+  Real time             =    0.05 sec. (44.27 ticks)
+                          ------------
+Total (root+branch&cut) =    0.08 sec. (65.78 ticks)
+MIP status(101): integer optimal solution
+Cplex Time: 0.08sec (det. 65.78 ticks)
+Fixing integer variables, and solving final LP...
+Version identifier: 12.10.0.0 | 2019-11-26 | 843d4de2ae
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_Simplex_Limits_Iterations               1999998442
+CPXPARAM_TimeLimit                               999.90600000000006
+CPXPARAM_Tune_TimeLimit                          199.9812
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+CPXPARAM_WorkDir                                 "D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\225r\"
+Tried aggregator 1 time.
+LP Presolve eliminated 429 rows and 445 columns.
+Aggregator did 2 substitutions.
+Reduced LP has 26 rows, 38 columns, and 92 nonzeros.
+Presolve time = 0.00 sec. (0.32 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Scaled dual infeas =            32.000000
+Iteration:    10   Dual objective     =           567.436865
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.55 ticks)
+
+Proven optimal solution.
+
+MIP Solution:          593.945652    (1924 iterations, 222 nodes)
+Final Solve:           593.945652    (12 iterations)
+
+Best possible:         593.945652
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Starting major iteration 3
+--- DICOPT: Setting up next NLP
+CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+*** This solver runs with a community license.
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        4.5004471083E+01 (Input point)
+ 
+                   Pre-triangular equations:   238
+                   Post-triangular equations:  30
+                   Definitional equations:     30
+ 
+      1   0        0.0000000000E+00 (After pre-processing)
+      2   0        0.0000000000E+00 (After scaling)
+ 
+ ** Feasible solution. Value of objective =    542.025453517
+ 
+   Iter Phase Ninf     Objective     RGmax    NSB   Step InItr MX OK
+      4   3        4.9029359211E+02 0.0E+00     0
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+--- DICOPT: Checking convergence
+--- DICOPT: Search stopped on worsening of NLP subproblems
+--- DICOPT: Log File:
+ Major Major     Objective    CPU time  Itera- Evaluation Solver
+ Step  Iter       Function     (Sec)    tions   Errors
+  NLP    1      -449.93891      0.02       11      0      conopt
+  MIP    1       576.57573      0.08     1543      0      cplex
+  NLP    2       490.29359<     0.00        4      0      conopt
+  MIP    2       593.94565      0.09     1936      0      cplex
+  NLP    3       490.29359      0.00        4      0      conopt
+--- DICOPT: Terminating...
+--- DICOPT: Stopped on NLP worsening
+
+      The search was stopped because the objective function
+      of the NLP subproblems started to deteriorate.
+
+--- DICOPT: Best integer solution found: 490.293592
+--- Restarting execution
+--- A-n9-k3-multi-vartemp-model.gms(164) 2 Mb
+--- Reading solution for model simple
+--- Executing after solve: elapsed 0:00:01.371
+--- A-n9-k3-multi-vartemp-model.gms(168) 3 Mb
+--- GDX File D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-input-multi-vartemp.gdx
+--- A-n9-k3-multi-vartemp-model.gms(182) 3 Mb
+
+GDXXRW           31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+Input file : D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-input-multi-vartemp.gdx
+Output file: D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-
+Output file: D:\Yousuf\Eclipse  Workspace\OptEngineV2\GamsResources\A-n9-k3-output-multi-vartemp.xlsx
+Total time = 1109 Ms
+*** Status: Normal completion
+--- Job A-n9-k3-multi-vartemp-model.gms Stop 10/30/20 23:57:53 elapsed 0:00:02.550

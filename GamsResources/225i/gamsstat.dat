@@ -1,0 +1,122 @@
+=1
+-------------------------------------------------------------------------------
+=CDicopt 2         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+-------------------------------------------------------------------------------
+by Aldo Vecchietti, Director del Instituto INGAR,
+   CONICET, UTN, Santa Fe, Argentina
+by Ignacio E. Grossmann, Chemical Engineering Faculty,
+   Carnegie Mellon University, Pittsburgh, PA, USA
+-------------------------------------------------------------------------------
+=C*** This solver runs with a community license.
+=CCONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=0CONOPT 3         31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
+=C*** This solver runs with a community license.
+=1
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+=2
+    1  INPUT                                                                  (DEFAULT)
+    2  BRANCH * MAJERR MINERR JACERR                                          (DEFAULT)
+    3  OPTIMIZE                                                               (DEFAULT)
+    4  BRANCH * * * * * * MAJERR                                              (DEFAULT)
+    5  OUTPUT                                                                 (DEFAULT)
+    6  EXIT                                                                   (DEFAULT)
+    7  MAJERR MESSAGE MAJOR ERROR - TERMINATE                                 (DEFAULT)
+    8  EXIT                                                                   (DEFAULT)
+    9  MINERR MESSAGE MINOR ERROR - TERMINATE                                 (DEFAULT)
+   10  EXIT                                                                   (DEFAULT)
+   11  JACERR MESSAGE FUNCTION OR DERIVATIVE ERROR                            (DEFAULT)
+   12  OUTPUT                                                                 (DEFAULT)
+   13  EXIT                                                                   (DEFAULT)
+ 
+  ***  Line    1  INPUT
+ 
+  ***  Line    0  SET       LSAZRW   = TRUE
+ 
+  ***  Line    0  SET       LFEERR   =           0
+ 
+  ***  Line    0  SET       LFITER   =  1000000000
+ 
+  ***  Line    0  SET       RVTIME   =      1000.000000
+=1
+ 
+    The model has 285 variables and 394 constraints
+    with 1566 Jacobian elements, 426 of which are nonlinear.
+    The Hessian of the Lagrangian has 16 elements on the diagonal,
+    241 elements below the diagonal, and 236 nonlinear variables.
+=2
+ 
+  ***  Line    2  BRANCH with Lbranch =  1
+ 
+  ***  Line    3  OPTIMIZE
+ 
+Search for a first feasible solution
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        1.2136209141E+03 (Input point)
+=1
+ 
+                   Pre-triangular equations:   10
+                   Post-triangular equations:  119
+                   Definitional equations:     30
+ 
+=2
+      1   0        4.5000000000E+01 (After pre-processing)
+      2   0        2.0500000000E+01 (After scaling)
+      3   1    17  1.5763157895E+01 1.4E+01     4 1.0E+00    3 T  T
+      4   1    13  1.0607677987E+01 4.4E+00    15 1.0E+00    8 T  T
+      5   1     4  2.6428571429E+00 3.7E+00    34 1.0E+00   13 T  T
+      6   1     2  1.1428571429E+00 1.2E-01     8 1.0E+00    1 T  T
+      7   1     2  1.1428571429E+00 4.4E-16     8
+=1
+ 
+ ** Infeasible solution. Reduced gradient less than tolerance.
+ 
+=2
+ 
+  ***  Line    4  BRANCH with Lbranch =  2
+ 
+  ***  Line    5  OUTPUT
+ 
+  ***  Line    6  EXIT
+=1
+ 
+ CONOPT time Total                            0.003 seconds
+   of which: Function evaluations             0.001 = 33.3%
+             1st Derivative evaluations       0.001 = 33.3%
+ 
+=2
+ 
+ Work length =     170676 double words  =    1.30 Mbytes
+    Estimate =     170676 double words  =    1.30 Mbytes
+    Max used =      74152 double words  =    0.57 Mbytes
+ 
+ Timing for Function Evaluations:
+ 
+ Statistics for FDEval-Fnc Calls:       320. Time:      0.001 T/C:    3.1250E-06
+ Statistics for FDEval-Drv Calls:       288. Time:      0.001 T/C:    3.4722E-06
+ Statistics for 2DDirLag   Calls:         0. Time:      0.000 T/C:    0.0000E+00
+ Statistics for 2DLagr     Calls:         0. Time:      0.000 T/C:    0.0000E+00
+ 
+=C--- DICOPT: Relaxed NLP is infeasible
+=C
+=C      The Relaxed NLP was infeasible. Please check your model and
+=C      make sure it solves correctly as an RMINLP model. Also
+=C      consider switching to a different RMINLP solver.
+=C
+=1
+=2
+ DICOPT Log File
+ ------------------------------------------------------------------
+ Major Major     Objective    CPU time  Itera- Evaluation Solver
+ Step  Iter       Function     (Sec)    tions   Errors
+  NLP    1        *Infeas*      0.00        7      0      conopt
+ ------------------------------------------------------------------
+   Total solver times :  NLP =     0.00   MIP =     0.00
+ ------------------------------------------------------------------
