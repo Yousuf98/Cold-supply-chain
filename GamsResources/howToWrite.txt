@@ -1,11 +1,43 @@
-text="Customers Demands:"        rng=A1
-squeeze=n        par=D           rng=A2
-text="Customers Time Windows:"   rng=A4
-text="Lower limit:"              rng=A5
-squeeze=n        par=L           rng=A6
-text="Upper limit:"              rng=A8
-squeeze=n        par=U           rng=A9
-text="Total cost:"               rng=A11
-var=Cost.l                       rng=A12
-text="Solution Routes:"          rng=A13
-var=x.l                          rng=A14
+text="Customers Demands:"        rng=Sheet1!A1
+squeeze=n        par=D           rng=Sheet1!A2
+text="Customers Time Windows:"   rng=Sheet1!A10
+text="Lower limit:"              rng=Sheet1!A11
+squeeze=n        par=L           rng=Sheet1!A12
+text="Upper limit:"              rng=Sheet1!A13
+squeeze=n        par=U           rng=Sheet1!A14
+text="Solution Routes:"          rng=Sheet1!A16
+var=x.l                          rng=Sheet1!A19
+text="ETA Matrix:"               rng=Sheet2!A1
+squeeze=n        par=S           rng=Sheet2!A2
+text="Maximum Shelf Lives:"      rng=Sheet2!A13
+squeeze=n        par=MSL         rng=Sheet2!A14
+text="Shelf Lives:"              rng=Sheet3!A1
+squeeze=n        var=SL          rng=Sheet3!A2
+text="Re-routing Run:"           rng=Sheet4!A1
+squeeze=n       par=Ys           rng=Sheet4!B1
+text="Surplus Cost:"             rng=Sheet4!A2
+squeeze=n       var=sCost        rng=Sheet4!B2
+text="Surplus:"                  rng=Sheet4!A4
+squeeze=n        var=surplus     rng=Sheet4!A5
+text="Early Arrival Indicators"  rng=Sheet5!A4
+squeeze=n var=E                  rng=Sheet5!A5
+text="Late Arrival Indicators"   rng=Sheet5!A7
+squeeze=n var=T                  rng=Sheet5!A8
+text="On-Time Arrival Indicators"   rng=Sheet5!A10
+squeeze=n var=Q                  rng=Sheet5!A11
+text="Arrival times by truck"     rng=Sheet5!A16
+squeeze=n   var=AR.l             rng=Sheet5!A17
+text="Total Cost"                  rng=Sheet6!A1
+var=Cost                            rng=Sheet6!B1
+text="Quality Cost"                  rng=Sheet6!A2
+var=qCost                            rng=Sheet6!B2
+text="Truck Hiring Cost"              rng=Sheet6!A3
+var=tCost                               rng=Sheet6!B3
+text="Transportation Cost"              rng=Sheet6!A4
+var=dCost                               rng=Sheet6!B4
+text="Late arrival Cost"                rng=Sheet6!A5
+var=lCost                               rng=Sheet6!B5
+text="Early arrival Cost"           rng=Sheet6!A6
+var=eCost                           rng=Sheet6!B6
+text="Rank"                         rng=Sheet6!A13
+var=rank                            rng=Sheet6!A14
