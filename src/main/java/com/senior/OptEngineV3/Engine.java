@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -100,6 +101,9 @@ public class Engine {
 
 		// Total number of trucks (K)
 		ArrayList<String> K = new ArrayList<String>();
+
+		// List of Truck objects
+		ArrayList<Truck> trucks = new ArrayList<Truck>();
 
 		// Total number of products
 		ArrayList<Product> b = new ArrayList<Product>();
@@ -240,8 +244,8 @@ public class Engine {
 			}
 			i.add(end);
 			numL++;
-			//N = (numL - 1);
-			
+			// N = (numL - 1);
+
 			// Setup Demands in D
 			for (Location l : i) {
 				D.add(l.getDemand());
@@ -257,6 +261,8 @@ public class Engine {
 				maxTemp = Float.parseFloat(document.getString("maxTemperature"));
 				minTemp = Float.parseFloat(document.getString("minTemperature"));
 				Lk = Integer.parseInt(document.getString("truckCapacity"));
+				Truck truck = new Truck(document.getId(), Lk, maxTemp, minTemp);
+				trucks.add(truck);
 			}
 
 			// Retrieve Distances
@@ -784,7 +790,7 @@ public class Engine {
 
 		}
 		rowCount = 1;
-		for (String l : K) {
+		for (Truck l : trucks) {
 			Row row = sheetRLoad.createRow(++rowCount);
 			columnCount = 0;
 			for (Product field : b) {
@@ -792,11 +798,11 @@ public class Engine {
 				cell.setCellValue(Lk);
 			}
 		}
-		
-		for (int j = 0; j < K.size(); j++) {
+
+		for (int j = 0; j < trucks.size(); j++) {
 			Row row = sheetRLoad.getRow(j + 2);
 			cell = row.createCell(0);
-			String str = K.get(j);
+			String str = trucks.get(j).getName();
 			cell.setCellValue(str);
 		}
 
@@ -806,15 +812,28 @@ public class Engine {
 		cell = irow.createCell(0);
 		cell.setCellValue(0);
 
-		// Sheet for Product Capacity per Truck
+		// Sheet for Capacity per Truck
 		XSSFSheet sheetCap = workbook.createSheet("Cap");
 		irow = sheetCap.createRow(0);
 		cell = irow.createCell(0);
 		cell.setCellValue("Truck Capacity");
 
 		irow = sheetCap.createRow(1);
-		cell = irow.createCell(0);
-		cell.setCellValue(Lk);
+		for (int j = 0; j < trucks.size(); j++) {
+			Row row = sheetCap.getRow(1);
+			cell = row.createCell(j);
+			String str = trucks.get(j).getName();
+			cell.setCellValue(str);
+		}
+		irow = sheetCap.createRow(2);
+		for (int j = 0; j < trucks.size(); j++) {
+			Row row = sheetCap.getRow(2);
+			cell = row.createCell(j);
+			int cap = trucks.get(j).getCapacity();
+			cell.setCellValue(cap);
+		}
+		// cell = irow.createCell(0);
+		// cell.setCellValue(Lk);
 
 		// Sheet for Large Positive Number (M)
 		XSSFSheet sheetM = workbook.createSheet("M");
@@ -846,18 +865,14 @@ public class Engine {
 		cell = irow.createCell(0);
 		cell.setCellValue(fi);
 
-/*
-		// Sheet for Average Speed
-		XSSFSheet sheetv = workbook.createSheet("v");
-		irow = sheetv.createRow(0);
-		cell = irow.createCell(0);
-		cell.setCellValue("Average Speed");
+		/*
+		 * // Sheet for Average Speed XSSFSheet sheetv = workbook.createSheet("v"); irow
+		 * = sheetv.createRow(0); cell = irow.createCell(0);
+		 * cell.setCellValue("Average Speed");
+		 * 
+		 * irow = sheetv.createRow(1); cell = irow.createCell(0); cell.setCellValue(v);
+		 */
 
-		irow = sheetv.createRow(1);
-		cell = irow.createCell(0);
-		cell.setCellValue(v);
-*/
-		
 		// Sheet for Unloading Speed
 		XSSFSheet sheetz = workbook.createSheet("z");
 		irow = sheetz.createRow(0);
@@ -964,12 +979,12 @@ public class Engine {
 		System.out.println("\nReading output File produced and formatting for upload to database...");
 		// Create arrays for storing routes of each truck
 		ArrayList<ArrayList<String>> Routes = new ArrayList();
-		for (int j = 0; j < K.size(); j++) {
+		for (int j = 0; j < trucks.size(); j++) {
 			Routes.add(new ArrayList<String>());
 			Routes.get(j).add(i.get(0).getName()); // Initialize each array with DCS
 		}
 
-		String excelFilePath = "GamsResources\\A-n9-k3-output-multi-vartemp.xlsx";
+		String excelFilePath = "GamsResources\\A-n6-k3-output-multi-vartemp-v2.2.xlsx";
 		Workbook wb;
 		try {
 
@@ -980,7 +995,23 @@ public class Engine {
 			org.apache.poi.ss.usermodel.Sheet firstSheet = wb.getSheetAt(0);
 
 			// Read data and store in Routes
-			int RowCounter = 14;
+
+			// Get cell from where onwards Locations are stored
+			int startingIndex = 0;
+			while (true) {
+				Row row = firstSheet.getRow(startingIndex);
+				try {
+					Cell val = row.getCell(0);
+					if (val.getCellType()==CellType.STRING && val.getStringCellValue().equals("DCS"))
+						break;
+					startingIndex++;
+				} catch (NullPointerException e) {
+					// cell is empty
+					startingIndex++;
+				}
+			}
+
+			int RowCounter = startingIndex;
 			int ColCounter = 2;
 			Row row = firstSheet.getRow(RowCounter);
 			Row rowSrc = firstSheet.getRow(RowCounter);
@@ -992,7 +1023,8 @@ public class Engine {
 				// Obtain first retailer to visit from DCS. If none exist, this truck will not
 				// be used
 				double val = 0;
-				RowCounter = 14;
+
+				RowCounter = startingIndex;
 				for (int k = 0; k < (numL); k++) {
 					row = firstSheet.getRow(++RowCounter);
 					val = (double) row.getCell(ColCounter).getNumericCellValue();
@@ -1015,7 +1047,7 @@ public class Engine {
 						} else {
 							Routes.get(j).add(dest);
 						}
-						int index = 14;
+						int index = startingIndex;
 
 						for (int l = 0; l < (numL * numL); l++) {
 							row = firstSheet.getRow(index);
