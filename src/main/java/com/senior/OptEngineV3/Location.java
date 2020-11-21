@@ -9,11 +9,11 @@ public class Location {
 	private boolean start;
 	private boolean end;
 	private ArrayList<Integer> demand;
-	
-	
+	private float lattitude;
+	private float longitude;
 
 
-	public Location(String name, float lower, float upper, boolean start, boolean end, ArrayList<Integer> demand) {
+	public Location(String name, float lower, float upper, boolean start, boolean end, ArrayList<Integer> demand, float lattitude, float longitude) {
 		super();
 		this.name = name;
 		this.lower = lower;
@@ -21,6 +21,8 @@ public class Location {
 		this.start = start;
 		this.end = end;
 		this.demand = demand;
+		this.lattitude = lattitude;
+		this.longitude = longitude;
 	}
 
 	public ArrayList<Integer> getDemand() {
@@ -71,6 +73,22 @@ public class Location {
 		this.upper = upper;
 	}
 	
+	public float getLattitude() {
+		return lattitude;
+	}
+
+	public void setLattitude(float lattitude) {
+		this.lattitude = lattitude;
+	}
+
+	public float getLongitude() {
+		return longitude;
+	}
+
+	public void setLongitude(float longitude) {
+		this.longitude = longitude;
+	}
+
 	public static float HoursToFloat(String tmpHours) throws NumberFormatException {
 	     float result = 0;
 	     tmpHours = tmpHours.trim();

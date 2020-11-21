@@ -16,17 +16,21 @@ par=beta   rng=beta!A2   cDim=1
 par=gamma  rng=gamma!A2  cDim=1
 par=P      rng=P!A2      cDim=1
 par=W      rng=W!A2      dim=0
-par=RLoad     rng=RLoad!A2     rDim=1 cDim=1
 par=M      rng=M!A2      dim=0
 par=fm     rng=fm!A2     dim=0
 par=fi     rng=fi!A2     dim=0
 par=z      rng=z!A2      dim=0
-par=R      rng=R!A2      dim=0
+par=R      rng=R!A2      cDim=1
 par=EXP    rng=EXP!A2    dim=0
 par=maxTemp       rng=maxTemp!A2       dim=0
 par=minTemp       rng=minTemp!A2       dim=0
 par=maxTempCost   rng=maxTempCost!A2   dim=0
 par=costPerDegree rng=costPerDegree!A2 dim=0
-par=Ys      rng=Ys!A1   dim=0
+par=TND      rng=K!A4   cDim=1
+par=CLoad   rng=K!A13   cDim=1   rDim=1
 par=Cap     rng=Cap!A2  cDim=1
+par=TAD        rng=k!A7  cDim=1
+par=delta        rng=k!A10  cDim=1
+par=te           rng=te!A2     cDim=1
+par=LS          rng=LS!A2   cDim=1  rDim=1
 MaxDupeErrors = 100

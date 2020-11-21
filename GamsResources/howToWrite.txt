@@ -3,9 +3,9 @@ squeeze=n        par=D           rng=Sheet1!A2
 text="Customers Time Windows:"   rng=Sheet1!A10
 text="Lower limit:"              rng=Sheet1!A11
 squeeze=n        par=L           rng=Sheet1!A12
-text="Upper limit:"              rng=Sheet1!A13
-squeeze=n        par=U           rng=Sheet1!A14
-text="Solution Routes:"          rng=Sheet1!A16
+text="Upper limit:"              rng=Sheet1!A14
+squeeze=n        par=U           rng=Sheet1!A15
+text="Solution Routes:"          rng=Sheet1!A18
 var=x.l                          rng=Sheet1!A19
 text="ETA Matrix:"               rng=Sheet2!A1
 squeeze=n        par=S           rng=Sheet2!A2
@@ -13,8 +13,6 @@ text="Maximum Shelf Lives:"      rng=Sheet2!A13
 squeeze=n        par=MSL         rng=Sheet2!A14
 text="Shelf Lives:"              rng=Sheet3!A1
 squeeze=n        var=SL          rng=Sheet3!A2
-text="Re-routing Run:"           rng=Sheet4!A1
-squeeze=n       par=Ys           rng=Sheet4!B1
 text="Surplus Cost:"             rng=Sheet4!A2
 squeeze=n       var=sCost        rng=Sheet4!B2
 text="Surplus:"                  rng=Sheet4!A4
@@ -40,4 +38,8 @@ var=lCost                               rng=Sheet6!B5
 text="Early arrival Cost"           rng=Sheet6!A6
 var=eCost                           rng=Sheet6!B6
 text="Rank"                         rng=Sheet6!A13
-var=rank                            rng=Sheet6!A14
+var=rank.l                            rng=Sheet6!A14
+text="Trucks Used"                       rng=Sheet6!B8
+var=Y.l                                    rng=Sheet6!B9
+text="Current Stock"                rng=Sheet7!A1
+var=RLoad.l                           rng=Sheet7!A2

@@ -1,20 +1,21 @@
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/02/20 19:50:30 Page 1
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/21/20 07:38:46 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
 
-GDXIN   D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\A-n6-k3-input-multi-vartemp-v2.2.gdx
-  37   
-  38   
-  39  Set i all locations;
-  40  alias(i,j);
-  41  set subi(i) First to Last retailer not including DCS or DCE;
-  42  set sub2i(i) starting warehouse and customers but not DCE;
-  43  set subj(j)  customers... same as subi;
-  44  set sub2j(j) customers and ending warehouse;
-  45  set k trucks;
-  46  set b products;
-  47   
+GDXIN   D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\CC-v2.9.gdx
+  41   
+  42   
+  43  Set i all locations;
+  44  alias(i,j);
+  45  set subi(i) First to Last retailer not including DCS or DCE;
+  46  set sub2i(i) starting warehouse and customers but not DCE;
+  47  set subj(j)  customers... same as subi;
+  48  set sub2j(j) customers and ending warehouse;
+  49  set k trucks;
+  50  set b products;
+  51   
+  52   
 --- LOAD  i = 1:i
 --- LOAD  subi = 2:subi
 --- LOAD  sub2i = 3:sub2i
@@ -22,51 +23,52 @@ GDXIN   D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\A-n6-k3-input-mul
 --- LOAD  sub2j = 5:sub2j
 --- LOAD  k = 6:k
 --- LOAD  b = 7:b
-  49   
-  50  scalar N total number of nodes including warehouse start and warehouse end;
-  51  N=card(j);
-  52   
-  53  scalar W fixed cost for using a truck: AED per truck;
-  54  scalar M large positive number;
-  55  scalar fm fuel cost for a moving truck: AED per hour;
-  56  scalar fi fuel cost for an idle truck: AED per hpur;
-  57  scalar z unloading speed: units per hour;
-  58  scalar R penalty rate for being late;
-  59  scalar EXP e;
-  60  scalars maxTemp,minTemp maximum and minimum temperature of trucks;
-  61  scalar maxTempCost refrigeration cost at max temp;
-  62  scalar costPerDegree refrigeration cost for lowering max temp by 1 degree;
-  63   
+  54  scalar N total number of nodes including warehouse start and warehouse end;
+  55  N=card(j);
+  56   
+  57  scalar W fixed cost for using a truck: AED per truck;
+  58  scalar M large positive number;
+  59  scalar fm fuel cost for a moving truck: AED per hour;
+  60  scalar fi fuel cost for an idle truck: AED per hpur;
+  61  scalar z unloading speed: units per hour;
+  62  scalar EXP e;
+  63  scalars maxTemp,minTemp maximum and minimum temperature of trucks;
+  64  scalar maxTempCost refrigeration cost at max temp;
+  65  scalar costPerDegree refrigeration cost for lowering max temp by 1 degree;
+  66   
 --- LOAD  W = 18:W
---- LOAD  M = 20:M
---- LOAD  fm = 21:fm
---- LOAD  fi = 22:fi
---- LOAD  z = 23:z
---- LOAD  R = 24:R
---- LOAD  EXP = 25:EXP
---- LOAD  maxTemp = 26:maxTemp
---- LOAD  minTemp = 27:minTemp
---- LOAD  maxTempCost = 28:maxTempCost
---- LOAD  costPerDegree = 29:costPerDegree
-  65   
-  66  parameter RLoad(k,b) matrix of  residual load for each truck with respect to different products;
-  67  parameter S(i,j) ETA matrix;
-  68  parameter D(j,b) demand at location j of product b;
-  69  parameter L(j) lower limit of time window at customer j;
-  70  parameter U(j) upper limit of time window at customer j;
-  71  parameter MSL(b) maximum shelf life of product b: days;
-  72  parameter Ys   0 if this is an initial planning run and 1 if this is a re-routing run;
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/02/20 19:50:30 Page 2
+--- LOAD  M = 19:M
+--- LOAD  fm = 20:fm
+--- LOAD  fi = 21:fi
+--- LOAD  z = 22:z
+--- LOAD  EXP = 24:EXP
+--- LOAD  maxTemp = 25:maxTemp
+--- LOAD  minTemp = 26:minTemp
+--- LOAD  maxTempCost = 27:maxTempCost
+--- LOAD  costPerDegree = 28:costPerDegree
+  68   
+  69  parameter S(i,j) ETA matrix;
+  70  parameter D(j,b), D(i,b) demand at location j of product b;
+  71  parameter L(j) lower limit of time window at customer j;
+  72  parameter U(j) upper limit of time window at customer j;
+  73  parameter MSL(b) maximum shelf life of product b: days;
+  74  parameter minSL(b) minimum acceptable shelf life;
+  75  parameters alpha(b), beta(b), gamma(b) coef. of door openings..transportation times..temperature;
+  76  parameter P(b) unit price of product b: AED per unit;
+  77  parameter Cap(k) Total capacity of each truck regardless of product;
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/21/20 07:38:46 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
 
-  73  parameter minSL(b) minimum acceptable shelf life;
-  74  parameters alpha(b), beta(b), gamma(b) coef. of door openings..transportation times..temperature;
-  75  parameter P(b) unit price of product b: AED per unit;
-  76  parameter Cap(k) Total capacity of each truck regardless of product;
-  77   
---- LOAD  RLoad = 19:RLoad
+  78  parameter delta(k) Rank of the second-to-last customer served by truck k at the re-routing time. This parameter is 0 in the first (planning) run and non-zero in any re-routing run;
+  79  parameter te(k) Time elapsed since truck k left the DC. This parameter is 0 in the first (planning) run and non-zero in any re-routing run;
+  80  parameter R(j) penalty rate for being late;
+  81  Parameter LS(j,k) Last-served customer for each truck;
+  82  Parameter TND(k) Trucks not yet deployed;
+  83  Parameter CLoad(k,b) Current stock in trucks already deployed;
+  84  Parameter TAD(k) Trucks Already Deployed;
+  85   
 --- LOAD  S = 8:S
 --- LOAD  D = 9:D
 --- LOAD  L = 10:L
@@ -77,192 +79,224 @@ C o m p i l a t i o n
 --- LOAD  beta = 15:beta
 --- LOAD  gamma = 16:gamma
 --- LOAD  P = 17:P
---- LOAD  Ys = 30:Ys
 --- LOAD  Cap = 31:Cap
-  80   
-  81   
-  82  Variables Cost total cost
-  83            tCost cost for using trucks
-  84            dCost cost for distance traveled
-  85            qCost cost for quality lost
-  86            eCost cost for arriving early
-  87            lCost cost for arriving late
-  88            sCost quality cost of surplus
-  89            surplus(k,b) amount of surplus in truck k of product b;
-  90   
-  91   
-  92  binary variables X(i,j,k) traveling from i to j using truck k
-  93                   Y(k) using truck k
-  94                   E(j) arriving early at location j
-  95                   Q(j) arriving on time at location j
-  96                   T(j) arriving late at location j;
-  97   
-  98  positive variable AR(k,j) arrival time of truck k at location j;
-  99  integer variables rank(j,k),rank(i,k) for subtour elimination constraint;
- 100  integer variable temp(k) temperature of truck k;
- 101  positive variable SL(j,k,b) shelf life of product b at customer j;
- 102  positive variable rg(k) refrigeration cost of truck k;
- 103  positive variable C(i,j,k) cost of traveling from i to j using truck k;
- 104   
- 105   
- 106  Equations OF objective function
- 107            eq0 use trucks in order
- 108            eq1, eq2, eq3, eq4, eq5 separate cost equations
- 109            eq6, eq7 refrigeration and fuel costs
- 110            eq8, eq9 Defintions of amount of surplus and quality cost of surplus
- 111            const2 constraint 2: demand of trip is less than max load of truck
- 112            const2a
- 113            const3 constraint 3: all customer nodes must be entered once
- 114            const4 constraint 4: all customer nodes must be left once
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/02/20 19:50:30 Page 3
+--- LOAD  delta = 33:delta
+--- LOAD  te = 34:te
+--- LOAD  R = 23:R
+--- LOAD  LS = 35:LS
+--- LOAD  TND = 29:TND
+--- LOAD  CLoad = 30:CLoad
+--- LOAD  TAD = 32:TAD
+  88   
+  89   
+  90  Variable Cost total cost;
+  91  Variable          tCost cost for using trucks;
+  92  Variable          dCost cost for distance traveled;
+  93  Variable          qCost cost for quality lost;
+  94  Variable          eCost cost for arriving early;
+  95  Variable          lCost cost for arriving late;
+  96  Variable          sCost quality cost of surplus;
+  97  Variable          surplus(k,b) amount of surplus in truck k of product b;
+  98   
+  99   
+ 100   
+ 101  binary variables X(i,j,k) traveling from i to j using truck k
+ 102                   Y(k) using truck k
+ 103                   NTD(k) New Trucks Deployed
+ 104                   E(j) arriving early at location j
+ 105                   Q(j) arriving on time at location j
+ 106                   T(j) arriving late at location j;
+ 107   
+ 108  positive variable AR(k,j) arrival time of truck k at location j;
+ 109  AR.lo(k,j)=0;
+ 110  positive variable RLoad(j,k,b), RLoad(i,k,b) The stock of product b in truck k at location j;
+ 111  RLoad.lo(j,k,b)=0;
+ 112  RLoad.up(j,k,b)=Cap(k);
+ 113  integer variables rank(j,k),rank(i,k) subtour elimination constraint;
+ 114  rank.lo(i,k)=0;
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/21/20 07:38:46 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
 
- 115            const5 constraint 5: same truck to enter and leave node
- 116            const6, const7 constraints 6&7: warehouse must be left and entered once per trip
- 117            const8, const9, const10 constraints 8&9&10: further warehouse movement control
- 118            const11, const11a constraint 11&11a: subtour elimination constraints
- 119            const12, const12a
+ 115  rank.up(j,k)=N+1;
+ 116  integer variable temp(k) temperature of truck k;
+ 117  positive variable SL(j,k,b) shelf life of product b at customer j;
+ 118  positive variable rg(k) refrigeration cost of truck k;
+ 119  positive variable C(i,j,k) cost of traveling from i to j using truck k;
  120   
- 121            const13 constraint 13: arrival time after lower bound
- 122            const14, const15, const16, const17 constraints 13&14&15&16: setting time variables
- 123            const18 constraint 18: shelf life calculations
- 124            const19 constraint 19: minimum requirement for shelf life
- 125            const20, const21 constraints 20&21: controlling truck temperature
- 126            const22 Restricting the rank of DCE
- 127            const24;
- 128   
- 129  * Fixed Cost of Truck Hiring
- 130  eq1..    tCost =e= sum(k, W * Y(k));
- 131   
- 132  *The cost of fuel and emissions while driving and while idling
- 133  eq7(i,j,k).. C(i,j,k) =e= (fm + rg(k)) * S(i,j)  + (fi + rg(k)) * sum(b, D(j,b))/z;
- 134  eq2..    dCost =e= sum((i,j,k), C(i,j,k) * X(i,j,k));
- 135   
- 136  *Quality cost during transportation
- 137  eq3..    qCost =e= sum((i,j,k,b), P(b) *(MSL(b) - SL(j,k,b)) * D(j,b)/MSL(b) * X(i,j,k));
- 138   
- 139  *Surplus Amount calculation
- 140  eq8(k,b).. surplus(k,b)=e= Ys*Y(k)*(RLoad(k,b)- sum((sub2i(i),subj(j)),  D(j,b) * X(i,j,k)));
- 141   
- 142   
- 143  * Additional Quality Cost of Storing Surplus
- 144  eq9..    sCost=e=sum((k,b),surplus(k,b)*P(b)/MSL(b)*(MSL(b)*(1-EXP**(-alpha(b)*(rank('DCE',k))-beta(b)*(12+AR(k,'DCE')+surplus(k,b)/z)-gamma(b)*temp(k)))));
- 145   
- 146   
- 147  *Refrigeration cost per unit time
- 148  eq6(k)..     rg(k) =e= maxTempCost + (maxTemp - temp(k)) * costPerDegree;
- 149   
- 150   
- 151  **Penalties for missing retailer's time window
- 152  *Late Arrival Cost
- 153  eq5..    lCost =e= sum((sub2j(j),k), R * T(j) * (sum(b, D(j,b))/z + AR(k,j)- U(j)));
- 154  *Early Arrival Cost
- 155  eq4..    eCost =e= sum((subj(j),k), fi * (L(j) - AR(k,j)) *  E(j));
- 156   
- 157   
+ 121   
+ 122  Equations OF objective function
+ 123  CostComp1,CostComp2,CostComp3,CostComp4,CostComp5,CostComp6,CostComp7,CostComp8,CostComp9
+ 124  StkCon1,StkCon2,StkCon3,StkCon4
+ 125  TrkCon1,TrkCon2
+ 126  QualCon1,QualCon2,QualCon3,QualCon4,QualCon5
+ 127  TransCon1,TransCon2,TransCon3,TransCon4,TransCon5,TransCon6,TransCon7,TransCon8,TransCon9,TransCon10,TransCon11,TransCon12,TransCon13
+ 128  ArrivalCon1,ArrivalCon2,ArrivalCon3,ArrivalCon4,ArrivalCon5,ArrivalCon6,ArrivalCon7;
+ 129   
+ 130   
+ 131  * OBJECTIVE FUNCTION
+ 132  OF..Cost =e= tCost + dCost + qCost+ eCost + lCost+ sCost;
+ 133   
+ 134  * Fixed Cost of Truck Hiring
+ 135  CostComp1..    tCost =e= sum(k, W * Y(k));
+ 136   
+ 137  *The cost of fuel and emissions while driving and while idling
+ 138  CostComp2(i,j,k).. C(i,j,k) =e= (fm + rg(k)) * S(i,j)  + (fi + rg(k)) * sum(b, D(j,b))/z;
+ 139  CostComp3..    dCost =e= sum((i,j,k), C(i,j,k) * X(i,j,k));
+ 140   
+ 141  *Quality cost during transportation
+ 142  CostComp4..    qCost =e= sum((i,j,k,b), P(b) *(MSL(b) - SL(j,k,b)) * D(j,b)/MSL(b) * X(i,j,k));
+ 143   
+ 144   
+ 145  * Additional Quality Cost of Storing Surplus
+ 146  CostComp5..    sCost=e=sum((k,b),surplus(k,b)*P(b)*(1-EXP**(-alpha(b)*(rank('DCE',k)+delta(k))-beta(b)*(12+AR(k,'DCE')-L('DCS')+te(k)+surplus(k,b)/z)-gamma(b)*temp(k))));
+ 147   
+ 148   
+ 149  *Refrigeration cost per unit time
+ 150  CostComp6(k)..     rg(k) =e= maxTempCost + (maxTemp - temp(k)) * costPerDegree;
+ 151   
+ 152   
+ 153  **Penalties for missing retailer's time window
+ 154  *Late Arrival Cost
+ 155  CostComp7..    lCost =e= sum((sub2j(j),k), R(j) * T(j) * (sum(b, D(j,b))/z + AR(k,j)- U(j)));
+ 156  *Early Arrival Cost
+ 157  CostComp8..    eCost =e= sum((subj(j),k), fi * (L(j) - AR(k,j)) *  E(j));
  158   
- 159  * OBJECTIVE FUNCTION
- 160  OF..      Cost =e= tCost + dCost + qCost+ eCost + lCost+ sCost;
+ 159  *Definition of Surplus Amount as any positive stock returned to the warehouse
+ 160  CostComp9(k,b).. surplus(k,b)=e=RLoad('DCE',k,b);
  161   
- 162   
- 163  *Shelf Life Equation
- 164  const18(j,k,b).. SL(j,k,b) =e= MSL(b) * (EXP ** (-1* alpha(b) * rank(j,k)))* (EXP ** (-1 * beta(b) * AR(k,j)))* (EXP ** (-1 * gamma(b) * temp(k)));
- 165  *Minimum Shelf Life Constraint
- 166  const19(subj(j),k,b).. SL(j,k,b) =g= minSL(b);
- 167   
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/02/20 19:50:30 Page 4
+ 162  ***********************************************************************************************************************
+ 163   
+ 164  **Stock Constraints
+ 165   
+ 166  *Setting the initial stock
+ 167  StkCon1(k,b)$TND(k)..RLoad('DCS',k,b)=e=sum((sub2i(i),subj(j)),D(j,b)*X(i,j,k));
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/21/20 07:38:46 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
 
- 168   
- 169  ** Transportation Constraints
+ 168  StkCon2(k,b)$TAD(k)..RLoad('DCS',k,b)=e=CLoad(k,b);
+ 169   
  170   
- 171  * Use trucks in order
- 172  eq0(k)..    Y(k+1) =l= Y(k);
+ 171  *Re-calculating stock upon leaving at each stop
+ 172  StkCon3(sub2i(i),sub2j(j),k,b)..RLoad(i,k,b)=g=(RLoad(j,k,b)+D(i,b))*X(i,j,k);
  173   
- 174  * The total demand of a trip is less than the maximum load of the truck.
- 175  * (This is a redundant constraint in re-routing runs, but not in the initial planning run)
- 176  const2a(k)..sum((sub2i(i),subj(j),b),  D(j,b) * X(i,j,k)) =l= Cap(k) * Y(k);
+ 174  *Proper Calculation of DCE Stock
+ 175   
+ 176  StkCon4(k,b)$TAD(k)..RLoad('DCE',k,b)=e=RLoad('DCS',k,b)-sum((sub2i(i),subj(j)),D(j,b)*X(i,j,k));
  177   
- 178  * The total demand for each product on a trip is less than the current stock of that product on the truck .
- 179  *(This is a redundant constraint in initial planning, but not in re-routing runs).
- 180  const2(k,b).. sum((sub2i(i),subj(j)),  D(j,b) * X(i,j,k)) =l= RLoad(k,b) * Y(k);
+ 178  **********************************************************************************************************************
+ 179   
+ 180  * Truck Usage Constraints
  181   
- 182   
- 183   
- 184  *Each customer must be entered once, left once, and by the same truck
- 185  const3(subj(j)).. sum((sub2i(i), k), X(i,j,k)) =e= 1;
- 186  const4(subi(i)).. sum((sub2j(j), k), X(i,j,k)) =e= 1;
- 187  const5(subj(j),k).. sum(sub2i(i), X(i,j,k)) =e= sum(sub2j(i), X(j,i,k));
- 188   
- 189  *The warehouse must be entered once and left once per trip
- 190  const6(k).. sum(subj(j), X('DCS',j,k)) =e= Y(k);
- 191  const7(k).. sum(subi(i), X(i,'DCE',k)) =e= Y(k);
+ 182  *Trucks Used=Trucks Already Deployed+New Trucks Deployed
+ 183  TrkCon1(k)..Y(k)=e=TAD(k)+NTD(k);
+ 184   
+ 185  * Use trucks in order
+ 186  TrkCon2(k)..    Y(k+1) =l= Y(k);
+ 187   
+ 188  ***********************************************************************************************************************
+ 189   
+ 190  ** Quality Constraints
+ 191   
  192   
- 193  *A trip cannot start from node N or end at node 0 or go directly from 0 to N.
- 194  const8.. sum((i,k), X(i,'DCS',k)) =e= 0;
- 195  const9.. sum((j,k), X('DCE',j,k)) =e= 0;
- 196  const10.. sum(k, X('DCS','DCE',k)) =e= 0;
- 197   
- 198  * Subtour Elimination Constraints
- 199  const11(sub2j(j),sub2i(i),k).. rank(j,k) =g= rank(i,k) + N * X(i,j,k) - N + 1;
- 200  const22(k)..rank('DCE',k)=l=sum((sub2i(i),sub2j(j)),X(i,j,k));
- 201  const11a(k).. rank('DCS',k) =e= 0;
- 202   
- 203  *Arrival Time Calculations
- 204   
- 205  const12(sub2j(j),sub2i(i),k).. AR(k,j) =g= AR(k,i) + sum(b, D(i,b))/z + S(i,j) - (1 - X(i,j,k))* M;
- 206  const24(k,j)..AR(k,j)=l=M*sum(sub2i(i),X(i,j,k));
- 207  const12a(k).. AR(k,'DCS') =e= 0;
- 208   
+ 193  *Shelf Life Equation
+ 194  QualCon1(sub2j(j),k,b).. SL(j,k,b) =e= MSL(b)*EXP ** (-alpha(b) * (rank(j,k)+delta(k))-beta(b) * (AR(k,j)-L('DCS')+te(k)+D(j,b)/z)-gamma(b) * temp(k));
+ 195  *Minimum Shelf Life Constraint
+ 196  QualCon2(subj(j),k,b).. SL(j,k,b) =g= minSL(b);
+ 197  *Maximum Shelf Life Constraint
+ 198  QualCon3(k,b).. SL('DCS',k,b) =e= MSL(b);
+ 199   
+ 200  * Truck Temperature Constraints
+ 201  QualCon4(k).. temp(k)=g= minTemp;
+ 202  QualCon5(k).. temp(k)=l= maxTemp;
+ 203   
+ 204  *************************************************************************************************************************
+ 205  ** Transportation Constraints
+ 206   
+ 207  * The total demand of a trip is less than the maximum load of the truck.
+ 208  * (This is a redundant constraint in re-routing runs, but not in the initial planning run)
  209   
- 210  * Setting values of Late/Early/On-Time Arrival Indicators
+ 210  TransCon1(k)..sum((sub2i(i),subj(j),b),  D(j,b) * X(i,j,k)) =l= Cap(k) * Y(k);
  211   
- 212  const13(k,sub2j(j)).. AR(k,j) =l= L(j)  +  M*(1- E(j)) ;
- 213  const14(k,sub2j(j)).. AR(k,j) =g= U(j)  -  M*(1- T(j)) ;
- 214  const15(k,sub2j(j)).. AR(k,j) =g= L(j)  -  M*(1- Q(j)) ;
- 215  const16(k,sub2j(j)).. AR(k,j) =l= U(j)  +  M*(1- Q(j)) ;
- 216  const17(sub2j(j)).. E(j) + Q(j) + T(j) =e= 1;
- 217   
+ 212   
+ 213  *Each customer must be entered once by one truck
+ 214   
+ 215  TransCon2(subj(j)).. sum((sub2i(i), k), X(i,j,k)) =e= 1;
+ 216   
+ 217  *Each customer must be left once by one truck
  218   
- 219  * Truck Temperature Constraints
- 220  const20(k).. temp(k)=g= minTemp;
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/02/20 19:50:30 Page 5
+ 219  TransCon3(subi(i)).. sum((sub2j(j), k), X(i,j,k)) =e= 1;
+ 220   
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/21/20 07:38:46 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
 
- 221  const21(k).. temp(k)=l= maxTemp;
- 222   
+ 221  *The same truck has to make both the entry to, and exit from, each customer
+ 222  TransCon4(subj(j),k).. sum(sub2i(i), X(i,j,k)) =e= sum(sub2j(i), X(j,i,k));
  223   
- 224   
- 225   
- 226  model simple /all/;
- 227  solve simple using MINLP minimizing Cost;
- 228   
- 229   
- 230  execute_unload 'A-n6-k3-input-multi-vartemp-v2.2.gdx', D L U x  S MSL SL Ys surplus sCost E T Q AR Cost qCost tCost dCost lCost eCost rank RLoad Cap;
- 231   
- 277  execute 'gdxxrw A-n6-k3-input-multi-vartemp-v2.2.gdx output=A-n6-k3-output-multi-vartemp-v2.2.xlsx @howToWrite.txt';
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/02/20 19:50:30 Page 6
+ 224  *The warehouse must be entered once and left once per truck
+ 225  TransCon5(k).. sum(subj(j), X('DCS',j,k)) =e= Y(k);
+ 226  TransCon6(k).. sum(subi(i), X(i,'DCE',k)) =e= Y(k);
+ 227   
+ 228  *A trip cannot start from node N or end at node 0 or go directly from 0 to N.
+ 229  TransCon7.. sum((i,k), X(i,'DCS',k)) =e= 0;
+ 230  TransCon8.. sum((j,k), X('DCE',j,k)) =e= 0;
+ 231  TransCon9.. sum(k, X('DCS','DCE',k)) =e= 0;
+ 232   
+ 233  *Only for deployed trucks: The truck must go directly from DCS to its last-served customer
+ 234   
+ 235  TransCon10(j,k)$LS(j,k)..X('DCS',j,k)=e=1;
+ 236   
+ 237  * Subtour Elimination Constraints
+ 238  TransCon11(sub2j(j),sub2i(i),k).. rank(j,k) =g= rank(i,k)+ 1 + M *( X(i,j,k) - 1);
+ 239  TransCon12(k)..rank('DCE',k)=l=sum((sub2i(i),sub2j(j)),X(i,j,k));
+ 240  TransCon13(k).. rank('DCS',k) =e= 0;
+ 241  ***********************************************************************************************************************
+ 242   
+ 243  **Arrival Time Calculations
+ 244   
+ 245  ArrivalCon1(sub2j(j),sub2i(i),k).. AR(k,j) =g= AR(k,i) + sum(b, D(i,b))/z + S(i,j) - (1 - X(i,j,k))* M;
+ 246   
+ 247  ArrivalCon2(k).. AR(K,'DCS') =e= L('DCS')*Y(k);
+ 248   
+ 249  * Setting values of Late/Early/On-Time Arrival Indicators
+ 250   
+ 251  ArrivalCon3(k,sub2j(j)).. AR(k,j) =l= L(j)  +  M*(1- E(j)) ;
+ 252  ArrivalCon4(k,sub2j(j)).. AR(k,j) =g= U(j)  -  M*(1- T(j)) ;
+ 253  ArrivalCon5(k,sub2j(j)).. AR(k,j) =g= L(j)  -  M*(1- Q(j)) ;
+ 254  ArrivalCon6(k,sub2j(j)).. AR(k,j) =l= U(j)  +  M*(1- Q(j)) ;
+ 255  ArrivalCon7(sub2j(j)).. E(j) + Q(j) + T(j) =e= 1;
+ 256   
+ 257   
+ 258   
+ 259  model simple /all/;
+ 260  option MINLP=baron;
+ 261  solve simple using MINLP minimizing Cost;
+ 262   
+ 263   
+ 264  execute_unload 'CC-v2.9.gdx', D L U x S MSL SL Y surplus sCost E T Q AR Cost qCost tCost dCost lCost eCost rank RLoad Cap;
+ 265   
+ 313  execute 'gdxxrw CC-v2.9.gdx output=CC-v2.9-output.xlsx @howToWrite.txt';
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/21/20 07:38:46 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Include File Summary
 
 
    SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
 
-     1        1 INPUT          0       0  D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\a-n6-k3-multi-vartemp-model-v2.2.gms
-     2       35 CALL           1      35  gdxxrw A-n6-k3-input-multi-vartemp-v2.2.xlsx @howToRead.txt
-     3       36 GDXIN          1      36  D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\A-n6-k3-input-multi-vartemp-v2.2.gdx
+     1        1 INPUT          0       0  D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\CC-v2.9.gms
+     2       39 CALL           1      39  gdxxrw CC-v2.9.xlsx @howToRead.txt
+     3       40 GDXIN          1      40  D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\CC-v2.9.gdx
 
 
-COMPILATION TIME     =        0.969 SECONDS      3 MB  31.1.1 r4b06116 WEX-WEI
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/02/20 19:50:30 Page 7
+COMPILATION TIME     =        1.000 SECONDS      3 MB  31.1.1 r4b06116 WEX-WEI
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/21/20 07:38:46 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE simple Using MINLP From line 227
+Equation Listing    SOLVE simple Using MINLP From line 261
 
 
 ---- OF  =E=  objective function
@@ -270,489 +304,364 @@ Equation Listing    SOLVE simple Using MINLP From line 227
 OF..  Cost - tCost - dCost - qCost - eCost - lCost - sCost =E= 0 ; (LHS = 0)
      
 
----- eq0  =L=  use trucks in order
+---- CostComp1  =E=  
 
-eq0(03f808cdd997cee9)..  - Y(03f808cdd997cee9) + Y(551d181c465cf86f) =L= 0 ; (LHS = 0)
-     
-eq0(551d181c465cf86f)..  - Y(551d181c465cf86f) =L= 0 ; (LHS = 0)
+CostComp1..  tCost - 200*Y(03f808cdd997cee9) - 200*Y(551d181c465cf86f) =E= 0 ; (LHS = 0)
      
 
----- eq1  =E=  
+---- CostComp2  =E=  
 
-eq1..  tCost - 200*Y(03f808cdd997cee9) - 200*Y(551d181c465cf86f) =E= 0 ; (LHS = 0)
+CostComp2(DCS,DCS,03f808cdd997cee9)..  C(DCS,DCS,03f808cdd997cee9) =E= 0 ; (LHS = 0)
      
-
----- eq2  =E=  
-
-eq2..  dCost + (0)*X(DCS,DCS,03f808cdd997cee9) + (0)*X(DCS,DCS,551d181c465cf86f) + (0)*X(DCS,a,03f808cdd997cee9) + (0)*X(DCS,a,551d181c465cf86f) + (0)*X(DCS,b,03f808cdd997cee9) + (0)*X(DCS,b,551d181c465cf86f) + (0)*X(DCS,c,03f808cdd997cee9)
+CostComp2(DCS,DCS,551d181c465cf86f)..  C(DCS,DCS,551d181c465cf86f) =E= 0 ; (LHS = 0)
      
-      + (0)*X(DCS,c,551d181c465cf86f) + (0)*X(DCS,d,03f808cdd997cee9) + (0)*X(DCS,d,551d181c465cf86f) + (0)*X(DCS,e,03f808cdd997cee9) + (0)*X(DCS,e,551d181c465cf86f) + (0)*X(DCS,DCE,03f808cdd997cee9) + (0)*X(DCS,DCE,551d181c465cf86f)
+CostComp2(DCS,a,03f808cdd997cee9)..  - 0.303055555555556*rg(03f808cdd997cee9) + C(DCS,a,03f808cdd997cee9) =E= 8.03527777777778 ; (LHS = 0, INFES = 8.03527777777778 ****)
      
-      + (0)*X(a,DCS,03f808cdd997cee9) + (0)*X(a,DCS,551d181c465cf86f) + (0)*X(a,a,03f808cdd997cee9) + (0)*X(a,a,551d181c465cf86f) + (0)*X(a,b,03f808cdd997cee9) + (0)*X(a,b,551d181c465cf86f) + (0)*X(a,c,03f808cdd997cee9) + (0)*X(a,c,551d181c465cf86f)
-     
-      + (0)*X(a,d,03f808cdd997cee9) + (0)*X(a,d,551d181c465cf86f) + (0)*X(a,e,03f808cdd997cee9) + (0)*X(a,e,551d181c465cf86f) + (0)*X(a,DCE,03f808cdd997cee9) + (0)*X(a,DCE,551d181c465cf86f) + (0)*X(b,DCS,03f808cdd997cee9) + (0)*X(b,DCS,551d181c465cf86f)
-     
-      + (0)*X(b,a,03f808cdd997cee9) + (0)*X(b,a,551d181c465cf86f) + (0)*X(b,b,03f808cdd997cee9) + (0)*X(b,b,551d181c465cf86f) + (0)*X(b,c,03f808cdd997cee9) + (0)*X(b,c,551d181c465cf86f) + (0)*X(b,d,03f808cdd997cee9) + (0)*X(b,d,551d181c465cf86f)
-     
-      + (0)*X(b,e,03f808cdd997cee9) + (0)*X(b,e,551d181c465cf86f) + (0)*X(b,DCE,03f808cdd997cee9) + (0)*X(b,DCE,551d181c465cf86f) + (0)*X(c,DCS,03f808cdd997cee9) + (0)*X(c,DCS,551d181c465cf86f) + (0)*X(c,a,03f808cdd997cee9) + (0)*X(c,a,551d181c465cf86f)
-     
-      + (0)*X(c,b,03f808cdd997cee9) + (0)*X(c,b,551d181c465cf86f) + (0)*X(c,c,03f808cdd997cee9) + (0)*X(c,c,551d181c465cf86f) + (0)*X(c,d,03f808cdd997cee9) + (0)*X(c,d,551d181c465cf86f) + (0)*X(c,e,03f808cdd997cee9) + (0)*X(c,e,551d181c465cf86f)
-     
-      + (0)*X(c,DCE,03f808cdd997cee9) + (0)*X(c,DCE,551d181c465cf86f) + (0)*X(d,DCS,03f808cdd997cee9) + (0)*X(d,DCS,551d181c465cf86f) + (0)*X(d,a,03f808cdd997cee9) + (0)*X(d,a,551d181c465cf86f) + (0)*X(d,b,03f808cdd997cee9) + (0)*X(d,b,551d181c465cf86f)
-     
-      + (0)*X(d,c,03f808cdd997cee9) + (0)*X(d,c,551d181c465cf86f) + (0)*X(d,d,03f808cdd997cee9) + (0)*X(d,d,551d181c465cf86f) + (0)*X(d,e,03f808cdd997cee9) + (0)*X(d,e,551d181c465cf86f) + (0)*X(d,DCE,03f808cdd997cee9) + (0)*X(d,DCE,551d181c465cf86f)
-     
-      + (0)*X(e,DCS,03f808cdd997cee9) + (0)*X(e,DCS,551d181c465cf86f) + (0)*X(e,a,03f808cdd997cee9) + (0)*X(e,a,551d181c465cf86f) + (0)*X(e,b,03f808cdd997cee9) + (0)*X(e,b,551d181c465cf86f) + (0)*X(e,c,03f808cdd997cee9) + (0)*X(e,c,551d181c465cf86f)
-     
-      + (0)*X(e,d,03f808cdd997cee9) + (0)*X(e,d,551d181c465cf86f) + (0)*X(e,e,03f808cdd997cee9) + (0)*X(e,e,551d181c465cf86f) + (0)*X(e,DCE,03f808cdd997cee9) + (0)*X(e,DCE,551d181c465cf86f) + (0)*X(DCE,DCS,03f808cdd997cee9)
-     
-      + (0)*X(DCE,DCS,551d181c465cf86f) + (0)*X(DCE,a,03f808cdd997cee9) + (0)*X(DCE,a,551d181c465cf86f) + (0)*X(DCE,b,03f808cdd997cee9) + (0)*X(DCE,b,551d181c465cf86f) + (0)*X(DCE,c,03f808cdd997cee9) + (0)*X(DCE,c,551d181c465cf86f)
-     
-      + (0)*X(DCE,d,03f808cdd997cee9) + (0)*X(DCE,d,551d181c465cf86f) + (0)*X(DCE,e,03f808cdd997cee9) + (0)*X(DCE,e,551d181c465cf86f) + (0)*X(DCE,DCE,03f808cdd997cee9) + (0)*X(DCE,DCE,551d181c465cf86f) + (0)*C(DCS,DCS,03f808cdd997cee9)
-     
-      + (0)*C(DCS,DCS,551d181c465cf86f) + (0)*C(DCS,a,03f808cdd997cee9) + (0)*C(DCS,a,551d181c465cf86f) + (0)*C(DCS,b,03f808cdd997cee9) + (0)*C(DCS,b,551d181c465cf86f) + (0)*C(DCS,c,03f808cdd997cee9) + (0)*C(DCS,c,551d181c465cf86f)
-     
-      + (0)*C(DCS,d,03f808cdd997cee9) + (0)*C(DCS,d,551d181c465cf86f) + (0)*C(DCS,e,03f808cdd997cee9) + (0)*C(DCS,e,551d181c465cf86f) + (0)*C(DCS,DCE,03f808cdd997cee9) + (0)*C(DCS,DCE,551d181c465cf86f) + (0)*C(a,DCS,03f808cdd997cee9)
-     
-      + (0)*C(a,DCS,551d181c465cf86f) + (0)*C(a,a,03f808cdd997cee9) + (0)*C(a,a,551d181c465cf86f) + (0)*C(a,b,03f808cdd997cee9) + (0)*C(a,b,551d181c465cf86f) + (0)*C(a,c,03f808cdd997cee9) + (0)*C(a,c,551d181c465cf86f) + (0)*C(a,d,03f808cdd997cee9)
-     
-      + (0)*C(a,d,551d181c465cf86f) + (0)*C(a,e,03f808cdd997cee9) + (0)*C(a,e,551d181c465cf86f) + (0)*C(a,DCE,03f808cdd997cee9) + (0)*C(a,DCE,551d181c465cf86f) + (0)*C(b,DCS,03f808cdd997cee9) + (0)*C(b,DCS,551d181c465cf86f) + (0)*C(b,a,03f808cdd997cee9)
-     
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/02/20 19:50:30 Page 8
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE simple Using MINLP From line 227
+REMAINING 15 ENTRIES SKIPPED
 
 
-     eq2  =E=       
+---- CostComp3  =E=  
+
+CostComp3..  dCost + (0)*X(DCS,DCS,03f808cdd997cee9) + (0)*X(DCS,DCS,551d181c465cf86f) + (0)*X(DCS,a,03f808cdd997cee9) + (0)*X(DCS,a,551d181c465cf86f) + (0)*X(DCS,DCE,03f808cdd997cee9) + (0)*X(DCS,DCE,551d181c465cf86f) + (0)*X(a,DCS,03f808cdd997cee9)
      
-      + (0)*C(b,a,551d181c465cf86f) + (0)*C(b,b,03f808cdd997cee9) + (0)*C(b,b,551d181c465cf86f) + (0)*C(b,c,03f808cdd997cee9) + (0)*C(b,c,551d181c465cf86f) + (0)*C(b,d,03f808cdd997cee9) + (0)*C(b,d,551d181c465cf86f) + (0)*C(b,e,03f808cdd997cee9)
+      + (0)*X(a,DCS,551d181c465cf86f) + (0)*X(a,a,03f808cdd997cee9) + (0)*X(a,a,551d181c465cf86f) + (0)*X(a,DCE,03f808cdd997cee9) + (0)*X(a,DCE,551d181c465cf86f) + (0)*X(DCE,DCS,03f808cdd997cee9) + (0)*X(DCE,DCS,551d181c465cf86f)
      
-      + (0)*C(b,e,551d181c465cf86f) + (0)*C(b,DCE,03f808cdd997cee9) + (0)*C(b,DCE,551d181c465cf86f) + (0)*C(c,DCS,03f808cdd997cee9) + (0)*C(c,DCS,551d181c465cf86f) + (0)*C(c,a,03f808cdd997cee9) + (0)*C(c,a,551d181c465cf86f) + (0)*C(c,b,03f808cdd997cee9)
+      + (0)*X(DCE,a,03f808cdd997cee9) + (0)*X(DCE,a,551d181c465cf86f) + (0)*X(DCE,DCE,03f808cdd997cee9) + (0)*X(DCE,DCE,551d181c465cf86f) + (0)*C(DCS,DCS,03f808cdd997cee9) + (0)*C(DCS,DCS,551d181c465cf86f) + (0)*C(DCS,a,03f808cdd997cee9)
      
-      + (0)*C(c,b,551d181c465cf86f) + (0)*C(c,c,03f808cdd997cee9) + (0)*C(c,c,551d181c465cf86f) + (0)*C(c,d,03f808cdd997cee9) + (0)*C(c,d,551d181c465cf86f) + (0)*C(c,e,03f808cdd997cee9) + (0)*C(c,e,551d181c465cf86f) + (0)*C(c,DCE,03f808cdd997cee9)
+      + (0)*C(DCS,a,551d181c465cf86f) + (0)*C(DCS,DCE,03f808cdd997cee9) + (0)*C(DCS,DCE,551d181c465cf86f) + (0)*C(a,DCS,03f808cdd997cee9) + (0)*C(a,DCS,551d181c465cf86f) + (0)*C(a,a,03f808cdd997cee9) + (0)*C(a,a,551d181c465cf86f)
      
-      + (0)*C(c,DCE,551d181c465cf86f) + (0)*C(d,DCS,03f808cdd997cee9) + (0)*C(d,DCS,551d181c465cf86f) + (0)*C(d,a,03f808cdd997cee9) + (0)*C(d,a,551d181c465cf86f) + (0)*C(d,b,03f808cdd997cee9) + (0)*C(d,b,551d181c465cf86f) + (0)*C(d,c,03f808cdd997cee9)
+      + (0)*C(a,DCE,03f808cdd997cee9) + (0)*C(a,DCE,551d181c465cf86f) + (0)*C(DCE,DCS,03f808cdd997cee9) + (0)*C(DCE,DCS,551d181c465cf86f) + (0)*C(DCE,a,03f808cdd997cee9) + (0)*C(DCE,a,551d181c465cf86f) + (0)*C(DCE,DCE,03f808cdd997cee9)
      
-      + (0)*C(d,c,551d181c465cf86f) + (0)*C(d,d,03f808cdd997cee9) + (0)*C(d,d,551d181c465cf86f) + (0)*C(d,e,03f808cdd997cee9) + (0)*C(d,e,551d181c465cf86f) + (0)*C(d,DCE,03f808cdd997cee9) + (0)*C(d,DCE,551d181c465cf86f) + (0)*C(e,DCS,03f808cdd997cee9)
-     
-      + (0)*C(e,DCS,551d181c465cf86f) + (0)*C(e,a,03f808cdd997cee9) + (0)*C(e,a,551d181c465cf86f) + (0)*C(e,b,03f808cdd997cee9) + (0)*C(e,b,551d181c465cf86f) + (0)*C(e,c,03f808cdd997cee9) + (0)*C(e,c,551d181c465cf86f) + (0)*C(e,d,03f808cdd997cee9)
-     
-      + (0)*C(e,d,551d181c465cf86f) + (0)*C(e,e,03f808cdd997cee9) + (0)*C(e,e,551d181c465cf86f) + (0)*C(e,DCE,03f808cdd997cee9) + (0)*C(e,DCE,551d181c465cf86f) + (0)*C(DCE,DCS,03f808cdd997cee9) + (0)*C(DCE,DCS,551d181c465cf86f)
-     
-      + (0)*C(DCE,a,03f808cdd997cee9) + (0)*C(DCE,a,551d181c465cf86f) + (0)*C(DCE,b,03f808cdd997cee9) + (0)*C(DCE,b,551d181c465cf86f) + (0)*C(DCE,c,03f808cdd997cee9) + (0)*C(DCE,c,551d181c465cf86f) + (0)*C(DCE,d,03f808cdd997cee9)
-     
-      + (0)*C(DCE,d,551d181c465cf86f) + (0)*C(DCE,e,03f808cdd997cee9) + (0)*C(DCE,e,551d181c465cf86f) + (0)*C(DCE,DCE,03f808cdd997cee9) + (0)*C(DCE,DCE,551d181c465cf86f) =E= 0 ; (LHS = 0)
+      + (0)*C(DCE,DCE,551d181c465cf86f) =E= 0 ; (LHS = 0)
      
 
----- eq3  =E=  
+---- CostComp4  =E=  
 
-eq3..  qCost - (60)*X(DCS,a,03f808cdd997cee9) - (60)*X(DCS,a,551d181c465cf86f) - (120)*X(DCS,b,03f808cdd997cee9) - (120)*X(DCS,b,551d181c465cf86f) - (15)*X(DCS,c,03f808cdd997cee9) - (15)*X(DCS,c,551d181c465cf86f) - (150)*X(DCS,d,03f808cdd997cee9)
+CostComp4..  qCost - (60)*X(DCS,a,03f808cdd997cee9) - (60)*X(DCS,a,551d181c465cf86f) - (60)*X(a,a,03f808cdd997cee9) - (60)*X(a,a,551d181c465cf86f) - (60)*X(DCE,a,03f808cdd997cee9) - (60)*X(DCE,a,551d181c465cf86f) + (0)*SL(a,03f808cdd997cee9,Banana)
      
-      - (150)*X(DCS,d,551d181c465cf86f) - (10)*X(DCS,e,03f808cdd997cee9) - (10)*X(DCS,e,551d181c465cf86f) - (60)*X(a,a,03f808cdd997cee9) - (60)*X(a,a,551d181c465cf86f) - (120)*X(a,b,03f808cdd997cee9) - (120)*X(a,b,551d181c465cf86f)
-     
-      - (15)*X(a,c,03f808cdd997cee9) - (15)*X(a,c,551d181c465cf86f) - (150)*X(a,d,03f808cdd997cee9) - (150)*X(a,d,551d181c465cf86f) - (10)*X(a,e,03f808cdd997cee9) - (10)*X(a,e,551d181c465cf86f) - (60)*X(b,a,03f808cdd997cee9) - (60)*X(b,a,551d181c465cf86f)
-     
-      - (120)*X(b,b,03f808cdd997cee9) - (120)*X(b,b,551d181c465cf86f) - (15)*X(b,c,03f808cdd997cee9) - (15)*X(b,c,551d181c465cf86f) - (150)*X(b,d,03f808cdd997cee9) - (150)*X(b,d,551d181c465cf86f) - (10)*X(b,e,03f808cdd997cee9)
-     
-      - (10)*X(b,e,551d181c465cf86f) - (60)*X(c,a,03f808cdd997cee9) - (60)*X(c,a,551d181c465cf86f) - (120)*X(c,b,03f808cdd997cee9) - (120)*X(c,b,551d181c465cf86f) - (15)*X(c,c,03f808cdd997cee9) - (15)*X(c,c,551d181c465cf86f)
-     
-      - (150)*X(c,d,03f808cdd997cee9) - (150)*X(c,d,551d181c465cf86f) - (10)*X(c,e,03f808cdd997cee9) - (10)*X(c,e,551d181c465cf86f) - (60)*X(d,a,03f808cdd997cee9) - (60)*X(d,a,551d181c465cf86f) - (120)*X(d,b,03f808cdd997cee9)
-     
-      - (120)*X(d,b,551d181c465cf86f) - (15)*X(d,c,03f808cdd997cee9) - (15)*X(d,c,551d181c465cf86f) - (150)*X(d,d,03f808cdd997cee9) - (150)*X(d,d,551d181c465cf86f) - (10)*X(d,e,03f808cdd997cee9) - (10)*X(d,e,551d181c465cf86f)
-     
-      - (60)*X(e,a,03f808cdd997cee9) - (60)*X(e,a,551d181c465cf86f) - (120)*X(e,b,03f808cdd997cee9) - (120)*X(e,b,551d181c465cf86f) - (15)*X(e,c,03f808cdd997cee9) - (15)*X(e,c,551d181c465cf86f) - (150)*X(e,d,03f808cdd997cee9)
-     
-      - (150)*X(e,d,551d181c465cf86f) - (10)*X(e,e,03f808cdd997cee9) - (10)*X(e,e,551d181c465cf86f) - (60)*X(DCE,a,03f808cdd997cee9) - (60)*X(DCE,a,551d181c465cf86f) - (120)*X(DCE,b,03f808cdd997cee9) - (120)*X(DCE,b,551d181c465cf86f)
-     
-      - (15)*X(DCE,c,03f808cdd997cee9) - (15)*X(DCE,c,551d181c465cf86f) - (150)*X(DCE,d,03f808cdd997cee9) - (150)*X(DCE,d,551d181c465cf86f) - (10)*X(DCE,e,03f808cdd997cee9) - (10)*X(DCE,e,551d181c465cf86f) + (0)*SL(a,03f808cdd997cee9,Banana)
-     
-      + (0)*SL(a,03f808cdd997cee9,Broccoli) + (0)*SL(a,551d181c465cf86f,Banana) + (0)*SL(a,551d181c465cf86f,Broccoli) + (0)*SL(b,03f808cdd997cee9,Strawberry) + (0)*SL(b,551d181c465cf86f,Strawberry) + (0)*SL(c,03f808cdd997cee9,Broccoli)
-     
-      + (0)*SL(c,551d181c465cf86f,Broccoli) + (0)*SL(d,03f808cdd997cee9,Banana) + (0)*SL(d,03f808cdd997cee9,Strawberry) + (0)*SL(d,551d181c465cf86f,Banana) + (0)*SL(d,551d181c465cf86f,Strawberry) + (0)*SL(e,03f808cdd997cee9,Broccoli)
-     
-      + (0)*SL(e,551d181c465cf86f,Broccoli) =E= 0 ; (LHS = 0)
-     
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/02/20 19:50:30 Page 9
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE simple Using MINLP From line 227
-
-
----- eq4  =E=  
-
-eq4..  eCost + (0)*E(a) + (0)*E(b) + (0)*E(c) + (0)*E(d) + (0)*E(e) + (0)*AR(03f808cdd997cee9,a) + (0)*AR(03f808cdd997cee9,b) + (0)*AR(03f808cdd997cee9,c) + (0)*AR(03f808cdd997cee9,d) + (0)*AR(03f808cdd997cee9,e) + (0)*AR(551d181c465cf86f,a)
-     
-      + (0)*AR(551d181c465cf86f,b) + (0)*AR(551d181c465cf86f,c) + (0)*AR(551d181c465cf86f,d) + (0)*AR(551d181c465cf86f,e) =E= 0 ; (LHS = 0)
+      + (0)*SL(a,03f808cdd997cee9,Broccoli) + (0)*SL(a,551d181c465cf86f,Banana) + (0)*SL(a,551d181c465cf86f,Broccoli) =E= 0 ; (LHS = 0)
      
 
----- eq5  =E=  separate cost equations
+---- CostComp5  =E=  
 
-eq5..  lCost + (234)*T(a) + (238)*T(b) + (237)*T(c) + (236)*T(d) + (238)*T(e) + (0)*T(DCE) + (0)*AR(03f808cdd997cee9,a) + (0)*AR(03f808cdd997cee9,b) + (0)*AR(03f808cdd997cee9,c) + (0)*AR(03f808cdd997cee9,d) + (0)*AR(03f808cdd997cee9,e)
+CostComp5..  sCost - (1.09468346817246)*surplus(03f808cdd997cee9,Banana) - (2.24752279095269)*surplus(03f808cdd997cee9,Broccoli) - (16.6757825453156)*surplus(03f808cdd997cee9,Strawberry) - (1.09468346817246)*surplus(551d181c465cf86f,Banana)
      
-      + (0)*AR(03f808cdd997cee9,DCE) + (0)*AR(551d181c465cf86f,a) + (0)*AR(551d181c465cf86f,b) + (0)*AR(551d181c465cf86f,c) + (0)*AR(551d181c465cf86f,d) + (0)*AR(551d181c465cf86f,e) + (0)*AR(551d181c465cf86f,DCE) =E= 0 ; (LHS = 0)
-     
-
----- eq6  =E=  
-
-eq6(03f808cdd997cee9)..  temp(03f808cdd997cee9) + rg(03f808cdd997cee9) =E= 14 ; (LHS = 0, INFES = 14 ****)
-     
-eq6(551d181c465cf86f)..  temp(551d181c465cf86f) + rg(551d181c465cf86f) =E= 14 ; (LHS = 0, INFES = 14 ****)
-     
-
----- eq7  =E=  refrigeration and fuel costs
-
-eq7(DCS,DCS,03f808cdd997cee9)..  C(DCS,DCS,03f808cdd997cee9) =E= 0 ; (LHS = 0)
-     
-eq7(DCS,DCS,551d181c465cf86f)..  C(DCS,DCS,551d181c465cf86f) =E= 0 ; (LHS = 0)
-     
-eq7(DCS,a,03f808cdd997cee9)..  - 0.303055555555556*rg(03f808cdd997cee9) + C(DCS,a,03f808cdd997cee9) =E= 8.03527777777778 ; (LHS = 0, INFES = 8.03527777777778 ****)
-     
-REMAINING 95 ENTRIES SKIPPED
-
-
----- eq8  =E=  
-
-eq8(03f808cdd997cee9,Banana)..  surplus(03f808cdd997cee9,Banana) =E= 0 ; (LHS = 0)
-     
-eq8(03f808cdd997cee9,Broccoli)..  surplus(03f808cdd997cee9,Broccoli) =E= 0 ; (LHS = 0)
-     
-eq8(03f808cdd997cee9,Strawberry)..  surplus(03f808cdd997cee9,Strawberry) =E= 0 ; (LHS = 0)
-     
-REMAINING 3 ENTRIES SKIPPED
-
-
----- eq9  =E=  Defintions of amount of surplus and quality cost of surplus
-
-eq9..  sCost - (1.19014792563501)*surplus(03f808cdd997cee9,Banana) - (2.39291081135388)*surplus(03f808cdd997cee9,Broccoli) - (17.9395111701739)*surplus(03f808cdd997cee9,Strawberry) - (1.19014792563501)*surplus(551d181c465cf86f,Banana)
-     
-      - (2.39291081135388)*surplus(551d181c465cf86f,Broccoli) - (17.9395111701739)*surplus(551d181c465cf86f,Strawberry) + (0)*AR(03f808cdd997cee9,DCE) + (0)*AR(551d181c465cf86f,DCE) + (0)*rank(DCE,03f808cdd997cee9) + (0)*rank(DCE,551d181c465cf86f)
+      - (2.24752279095269)*surplus(551d181c465cf86f,Broccoli) - (16.6757825453156)*surplus(551d181c465cf86f,Strawberry) + (0)*AR(03f808cdd997cee9,DCE) + (0)*AR(551d181c465cf86f,DCE) + (0)*rank(DCE,03f808cdd997cee9) + (0)*rank(DCE,551d181c465cf86f)
      
       + (0)*temp(03f808cdd997cee9) + (0)*temp(551d181c465cf86f) =E= 0 ; (LHS = 0)
      
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 10
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/21/20 07:38:46 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE simple Using MINLP From line 227
+Equation Listing    SOLVE simple Using MINLP From line 261
 
 
----- const2  =L=  constraint 2: demand of trip is less than max load of truck
+---- CostComp6  =E=  
 
-const2(03f808cdd997cee9,Banana)..  3*X(DCS,a,03f808cdd997cee9) + 2*X(DCS,d,03f808cdd997cee9) + 3*X(a,a,03f808cdd997cee9) + 2*X(a,d,03f808cdd997cee9) + 3*X(b,a,03f808cdd997cee9) + 2*X(b,d,03f808cdd997cee9) + 3*X(c,a,03f808cdd997cee9)
+CostComp6(03f808cdd997cee9)..  temp(03f808cdd997cee9) + rg(03f808cdd997cee9) =E= 14 ; (LHS = 0, INFES = 14 ****)
      
-      + 2*X(c,d,03f808cdd997cee9) + 3*X(d,a,03f808cdd997cee9) + 2*X(d,d,03f808cdd997cee9) + 3*X(e,a,03f808cdd997cee9) + 2*X(e,d,03f808cdd997cee9) - 10*Y(03f808cdd997cee9) =L= 0 ; (LHS = 0)
+CostComp6(551d181c465cf86f)..  temp(551d181c465cf86f) + rg(551d181c465cf86f) =E= 14 ; (LHS = 0, INFES = 14 ****)
      
-const2(03f808cdd997cee9,Broccoli)..  3*X(DCS,a,03f808cdd997cee9) + 3*X(DCS,c,03f808cdd997cee9) + 2*X(DCS,e,03f808cdd997cee9) + 3*X(a,a,03f808cdd997cee9) + 3*X(a,c,03f808cdd997cee9) + 2*X(a,e,03f808cdd997cee9) + 3*X(b,a,03f808cdd997cee9)
+
+---- CostComp7  =E=  
+
+CostComp7..  lCost =E= 0 ; (LHS = 0)
      
-      + 3*X(b,c,03f808cdd997cee9) + 2*X(b,e,03f808cdd997cee9) + 3*X(c,a,03f808cdd997cee9) + 3*X(c,c,03f808cdd997cee9) + 2*X(c,e,03f808cdd997cee9) + 3*X(d,a,03f808cdd997cee9) + 3*X(d,c,03f808cdd997cee9) + 2*X(d,e,03f808cdd997cee9)
+
+---- CostComp8  =E=  
+
+CostComp8..  eCost - (104)*E(a) + (0)*AR(03f808cdd997cee9,a) + (0)*AR(551d181c465cf86f,a) =E= 0 ; (LHS = 0)
      
-      + 3*X(e,a,03f808cdd997cee9) + 3*X(e,c,03f808cdd997cee9) + 2*X(e,e,03f808cdd997cee9) - 10*Y(03f808cdd997cee9) =L= 0 ; (LHS = 0)
+
+---- CostComp9  =E=  
+
+CostComp9(03f808cdd997cee9,Banana)..  surplus(03f808cdd997cee9,Banana) - RLoad(DCE,03f808cdd997cee9,Banana) =E= 0 ; (LHS = 0)
      
-const2(03f808cdd997cee9,Strawberry)..  2*X(DCS,b,03f808cdd997cee9) + 2*X(DCS,d,03f808cdd997cee9) + 2*X(a,b,03f808cdd997cee9) + 2*X(a,d,03f808cdd997cee9) + 2*X(b,b,03f808cdd997cee9) + 2*X(b,d,03f808cdd997cee9) + 2*X(c,b,03f808cdd997cee9)
+CostComp9(03f808cdd997cee9,Broccoli)..  surplus(03f808cdd997cee9,Broccoli) - RLoad(DCE,03f808cdd997cee9,Broccoli) =E= 0 ; (LHS = 0)
      
-      + 2*X(c,d,03f808cdd997cee9) + 2*X(d,b,03f808cdd997cee9) + 2*X(d,d,03f808cdd997cee9) + 2*X(e,b,03f808cdd997cee9) + 2*X(e,d,03f808cdd997cee9) - 10*Y(03f808cdd997cee9) =L= 0 ; (LHS = 0)
+CostComp9(03f808cdd997cee9,Strawberry)..  surplus(03f808cdd997cee9,Strawberry) - RLoad(DCE,03f808cdd997cee9,Strawberry) =E= 0 ; (LHS = 0)
      
 REMAINING 3 ENTRIES SKIPPED
 
 
----- const2a  =L=  
+---- StkCon1  =E=  
 
-const2a(03f808cdd997cee9)..  6*X(DCS,a,03f808cdd997cee9) + 2*X(DCS,b,03f808cdd997cee9) + 3*X(DCS,c,03f808cdd997cee9) + 4*X(DCS,d,03f808cdd997cee9) + 2*X(DCS,e,03f808cdd997cee9) + 6*X(a,a,03f808cdd997cee9) + 2*X(a,b,03f808cdd997cee9)
+StkCon1(03f808cdd997cee9,Banana)..  - 3*X(DCS,a,03f808cdd997cee9) - 3*X(a,a,03f808cdd997cee9) + RLoad(DCS,03f808cdd997cee9,Banana) =E= 0 ; (LHS = 0)
      
-      + 3*X(a,c,03f808cdd997cee9) + 4*X(a,d,03f808cdd997cee9) + 2*X(a,e,03f808cdd997cee9) + 6*X(b,a,03f808cdd997cee9) + 2*X(b,b,03f808cdd997cee9) + 3*X(b,c,03f808cdd997cee9) + 4*X(b,d,03f808cdd997cee9) + 2*X(b,e,03f808cdd997cee9)
+StkCon1(03f808cdd997cee9,Broccoli)..  - 3*X(DCS,a,03f808cdd997cee9) - 3*X(a,a,03f808cdd997cee9) + RLoad(DCS,03f808cdd997cee9,Broccoli) =E= 0 ; (LHS = 0)
      
-      + 6*X(c,a,03f808cdd997cee9) + 2*X(c,b,03f808cdd997cee9) + 3*X(c,c,03f808cdd997cee9) + 4*X(c,d,03f808cdd997cee9) + 2*X(c,e,03f808cdd997cee9) + 6*X(d,a,03f808cdd997cee9) + 2*X(d,b,03f808cdd997cee9) + 3*X(d,c,03f808cdd997cee9)
-     
-      + 4*X(d,d,03f808cdd997cee9) + 2*X(d,e,03f808cdd997cee9) + 6*X(e,a,03f808cdd997cee9) + 2*X(e,b,03f808cdd997cee9) + 3*X(e,c,03f808cdd997cee9) + 4*X(e,d,03f808cdd997cee9) + 2*X(e,e,03f808cdd997cee9) =L= 0 ; (LHS = 0)
-     
-const2a(551d181c465cf86f)..  6*X(DCS,a,551d181c465cf86f) + 2*X(DCS,b,551d181c465cf86f) + 3*X(DCS,c,551d181c465cf86f) + 4*X(DCS,d,551d181c465cf86f) + 2*X(DCS,e,551d181c465cf86f) + 6*X(a,a,551d181c465cf86f) + 2*X(a,b,551d181c465cf86f)
-     
-      + 3*X(a,c,551d181c465cf86f) + 4*X(a,d,551d181c465cf86f) + 2*X(a,e,551d181c465cf86f) + 6*X(b,a,551d181c465cf86f) + 2*X(b,b,551d181c465cf86f) + 3*X(b,c,551d181c465cf86f) + 4*X(b,d,551d181c465cf86f) + 2*X(b,e,551d181c465cf86f)
-     
-      + 6*X(c,a,551d181c465cf86f) + 2*X(c,b,551d181c465cf86f) + 3*X(c,c,551d181c465cf86f) + 4*X(c,d,551d181c465cf86f) + 2*X(c,e,551d181c465cf86f) + 6*X(d,a,551d181c465cf86f) + 2*X(d,b,551d181c465cf86f) + 3*X(d,c,551d181c465cf86f)
-     
-      + 4*X(d,d,551d181c465cf86f) + 2*X(d,e,551d181c465cf86f) + 6*X(e,a,551d181c465cf86f) + 2*X(e,b,551d181c465cf86f) + 3*X(e,c,551d181c465cf86f) + 4*X(e,d,551d181c465cf86f) + 2*X(e,e,551d181c465cf86f) =L= 0 ; (LHS = 0)
-     
-
----- const3  =E=  constraint 3: all customer nodes must be entered once
-
-const3(a)..  X(DCS,a,03f808cdd997cee9) + X(DCS,a,551d181c465cf86f) + X(a,a,03f808cdd997cee9) + X(a,a,551d181c465cf86f) + X(b,a,03f808cdd997cee9) + X(b,a,551d181c465cf86f) + X(c,a,03f808cdd997cee9) + X(c,a,551d181c465cf86f) + X(d,a,03f808cdd997cee9)
-     
-      + X(d,a,551d181c465cf86f) + X(e,a,03f808cdd997cee9) + X(e,a,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-const3(b)..  X(DCS,b,03f808cdd997cee9) + X(DCS,b,551d181c465cf86f) + X(a,b,03f808cdd997cee9) + X(a,b,551d181c465cf86f) + X(b,b,03f808cdd997cee9) + X(b,b,551d181c465cf86f) + X(c,b,03f808cdd997cee9) + X(c,b,551d181c465cf86f) + X(d,b,03f808cdd997cee9)
-     
-      + X(d,b,551d181c465cf86f) + X(e,b,03f808cdd997cee9) + X(e,b,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-const3(c)..  X(DCS,c,03f808cdd997cee9) + X(DCS,c,551d181c465cf86f) + X(a,c,03f808cdd997cee9) + X(a,c,551d181c465cf86f) + X(b,c,03f808cdd997cee9) + X(b,c,551d181c465cf86f) + X(c,c,03f808cdd997cee9) + X(c,c,551d181c465cf86f) + X(d,c,03f808cdd997cee9)
-     
-      + X(d,c,551d181c465cf86f) + X(e,c,03f808cdd997cee9) + X(e,c,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-REMAINING 2 ENTRIES SKIPPED
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 11
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE simple Using MINLP From line 227
-
-
----- const4  =E=  constraint 4: all customer nodes must be left once
-
-const4(a)..  X(a,a,03f808cdd997cee9) + X(a,a,551d181c465cf86f) + X(a,b,03f808cdd997cee9) + X(a,b,551d181c465cf86f) + X(a,c,03f808cdd997cee9) + X(a,c,551d181c465cf86f) + X(a,d,03f808cdd997cee9) + X(a,d,551d181c465cf86f) + X(a,e,03f808cdd997cee9)
-     
-      + X(a,e,551d181c465cf86f) + X(a,DCE,03f808cdd997cee9) + X(a,DCE,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-const4(b)..  X(b,a,03f808cdd997cee9) + X(b,a,551d181c465cf86f) + X(b,b,03f808cdd997cee9) + X(b,b,551d181c465cf86f) + X(b,c,03f808cdd997cee9) + X(b,c,551d181c465cf86f) + X(b,d,03f808cdd997cee9) + X(b,d,551d181c465cf86f) + X(b,e,03f808cdd997cee9)
-     
-      + X(b,e,551d181c465cf86f) + X(b,DCE,03f808cdd997cee9) + X(b,DCE,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-const4(c)..  X(c,a,03f808cdd997cee9) + X(c,a,551d181c465cf86f) + X(c,b,03f808cdd997cee9) + X(c,b,551d181c465cf86f) + X(c,c,03f808cdd997cee9) + X(c,c,551d181c465cf86f) + X(c,d,03f808cdd997cee9) + X(c,d,551d181c465cf86f) + X(c,e,03f808cdd997cee9)
-     
-      + X(c,e,551d181c465cf86f) + X(c,DCE,03f808cdd997cee9) + X(c,DCE,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-REMAINING 2 ENTRIES SKIPPED
-
-
----- const5  =E=  constraint 5: same truck to enter and leave node
-
-const5(a,03f808cdd997cee9)..  X(DCS,a,03f808cdd997cee9) - X(a,b,03f808cdd997cee9) - X(a,c,03f808cdd997cee9) - X(a,d,03f808cdd997cee9) - X(a,e,03f808cdd997cee9) - X(a,DCE,03f808cdd997cee9) + X(b,a,03f808cdd997cee9) + X(c,a,03f808cdd997cee9)
-     
-      + X(d,a,03f808cdd997cee9) + X(e,a,03f808cdd997cee9) =E= 0 ; (LHS = 0)
-     
-const5(a,551d181c465cf86f)..  X(DCS,a,551d181c465cf86f) - X(a,b,551d181c465cf86f) - X(a,c,551d181c465cf86f) - X(a,d,551d181c465cf86f) - X(a,e,551d181c465cf86f) - X(a,DCE,551d181c465cf86f) + X(b,a,551d181c465cf86f) + X(c,a,551d181c465cf86f)
-     
-      + X(d,a,551d181c465cf86f) + X(e,a,551d181c465cf86f) =E= 0 ; (LHS = 0)
-     
-const5(b,03f808cdd997cee9)..  X(DCS,b,03f808cdd997cee9) + X(a,b,03f808cdd997cee9) - X(b,a,03f808cdd997cee9) - X(b,c,03f808cdd997cee9) - X(b,d,03f808cdd997cee9) - X(b,e,03f808cdd997cee9) - X(b,DCE,03f808cdd997cee9) + X(c,b,03f808cdd997cee9)
-     
-      + X(d,b,03f808cdd997cee9) + X(e,b,03f808cdd997cee9) =E= 0 ; (LHS = 0)
-     
-REMAINING 7 ENTRIES SKIPPED
-
-
----- const6  =E=  
-
-const6(03f808cdd997cee9)..  X(DCS,a,03f808cdd997cee9) + X(DCS,b,03f808cdd997cee9) + X(DCS,c,03f808cdd997cee9) + X(DCS,d,03f808cdd997cee9) + X(DCS,e,03f808cdd997cee9) - Y(03f808cdd997cee9) =E= 0 ; (LHS = 0)
-     
-const6(551d181c465cf86f)..  X(DCS,a,551d181c465cf86f) + X(DCS,b,551d181c465cf86f) + X(DCS,c,551d181c465cf86f) + X(DCS,d,551d181c465cf86f) + X(DCS,e,551d181c465cf86f) - Y(551d181c465cf86f) =E= 0 ; (LHS = 0)
-     
-
----- const7  =E=  constraints 6&7: warehouse must be left and entered once per trip
-
-const7(03f808cdd997cee9)..  X(a,DCE,03f808cdd997cee9) + X(b,DCE,03f808cdd997cee9) + X(c,DCE,03f808cdd997cee9) + X(d,DCE,03f808cdd997cee9) + X(e,DCE,03f808cdd997cee9) - Y(03f808cdd997cee9) =E= 0 ; (LHS = 0)
-     
-const7(551d181c465cf86f)..  X(a,DCE,551d181c465cf86f) + X(b,DCE,551d181c465cf86f) + X(c,DCE,551d181c465cf86f) + X(d,DCE,551d181c465cf86f) + X(e,DCE,551d181c465cf86f) - Y(551d181c465cf86f) =E= 0 ; (LHS = 0)
-     
-
----- const8  =E=  
-
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 12
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE simple Using MINLP From line 227
-
-
-     const8  =E=  
-
-const8..  X(DCS,DCS,03f808cdd997cee9) + X(DCS,DCS,551d181c465cf86f) + X(a,DCS,03f808cdd997cee9) + X(a,DCS,551d181c465cf86f) + X(b,DCS,03f808cdd997cee9) + X(b,DCS,551d181c465cf86f) + X(c,DCS,03f808cdd997cee9) + X(c,DCS,551d181c465cf86f)
-     
-      + X(d,DCS,03f808cdd997cee9) + X(d,DCS,551d181c465cf86f) + X(e,DCS,03f808cdd997cee9) + X(e,DCS,551d181c465cf86f) + X(DCE,DCS,03f808cdd997cee9) + X(DCE,DCS,551d181c465cf86f) =E= 0 ; (LHS = 0)
-     
-
----- const9  =E=  
-
-const9..  X(DCE,DCS,03f808cdd997cee9) + X(DCE,DCS,551d181c465cf86f) + X(DCE,a,03f808cdd997cee9) + X(DCE,a,551d181c465cf86f) + X(DCE,b,03f808cdd997cee9) + X(DCE,b,551d181c465cf86f) + X(DCE,c,03f808cdd997cee9) + X(DCE,c,551d181c465cf86f)
-     
-      + X(DCE,d,03f808cdd997cee9) + X(DCE,d,551d181c465cf86f) + X(DCE,e,03f808cdd997cee9) + X(DCE,e,551d181c465cf86f) + X(DCE,DCE,03f808cdd997cee9) + X(DCE,DCE,551d181c465cf86f) =E= 0 ; (LHS = 0)
-     
-
----- const10  =E=  constraints 8&9&10: further warehouse movement control
-
-const10..  X(DCS,DCE,03f808cdd997cee9) + X(DCS,DCE,551d181c465cf86f) =E= 0 ; (LHS = 0)
-     
-
----- const11  =G=  
-
-const11(a,DCS,03f808cdd997cee9)..  - 7*X(DCS,a,03f808cdd997cee9) - rank(DCS,03f808cdd997cee9) + rank(a,03f808cdd997cee9) =G= -6 ; (LHS = 0)
-     
-const11(a,DCS,551d181c465cf86f)..  - 7*X(DCS,a,551d181c465cf86f) - rank(DCS,551d181c465cf86f) + rank(a,551d181c465cf86f) =G= -6 ; (LHS = 0)
-     
-const11(a,a,03f808cdd997cee9)..  - 7*X(a,a,03f808cdd997cee9) =G= -6 ; (LHS = 0)
-     
-REMAINING 69 ENTRIES SKIPPED
-
-
----- const11a  =E=  constraint 11&11a: subtour elimination constraints
-
-const11a(03f808cdd997cee9)..  rank(DCS,03f808cdd997cee9) =E= 0 ; (LHS = 0)
-     
-const11a(551d181c465cf86f)..  rank(DCS,551d181c465cf86f) =E= 0 ; (LHS = 0)
-     
-
----- const12  =G=  
-
-const12(a,DCS,03f808cdd997cee9)..  - 100*X(DCS,a,03f808cdd997cee9) - AR(03f808cdd997cee9,DCS) + AR(03f808cdd997cee9,a) =G= -99.9969444444444 ; (LHS = 0)
-     
-const12(a,DCS,551d181c465cf86f)..  - 100*X(DCS,a,551d181c465cf86f) - AR(551d181c465cf86f,DCS) + AR(551d181c465cf86f,a) =G= -99.9969444444444 ; (LHS = 0)
-     
-const12(a,a,03f808cdd997cee9)..  - 100*X(a,a,03f808cdd997cee9) =G= -99.7 ; (LHS = 0)
-     
-REMAINING 69 ENTRIES SKIPPED
-
-
----- const12a  =E=  
-
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 13
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE simple Using MINLP From line 227
-
-
-     const12a  =E=  
-
-const12a(03f808cdd997cee9)..  AR(03f808cdd997cee9,DCS) =E= 0 ; (LHS = 0)
-     
-const12a(551d181c465cf86f)..  AR(551d181c465cf86f,DCS) =E= 0 ; (LHS = 0)
-     
-
----- const13  =L=  constraint 13: arrival time after lower bound
-
-const13(03f808cdd997cee9,a)..  100*E(a) + AR(03f808cdd997cee9,a) =L= 100 ; (LHS = 0)
-     
-const13(03f808cdd997cee9,b)..  100*E(b) + AR(03f808cdd997cee9,b) =L= 100 ; (LHS = 0)
-     
-const13(03f808cdd997cee9,c)..  100*E(c) + AR(03f808cdd997cee9,c) =L= 100 ; (LHS = 0)
-     
-REMAINING 9 ENTRIES SKIPPED
-
-
----- const14  =G=  
-
-const14(03f808cdd997cee9,a)..  - 100*T(a) + AR(03f808cdd997cee9,a) =G= -88 ; (LHS = 0)
-     
-const14(03f808cdd997cee9,b)..  - 100*T(b) + AR(03f808cdd997cee9,b) =G= -88 ; (LHS = 0)
-     
-const14(03f808cdd997cee9,c)..  - 100*T(c) + AR(03f808cdd997cee9,c) =G= -88 ; (LHS = 0)
-     
-REMAINING 9 ENTRIES SKIPPED
-
-
----- const15  =G=  
-
-const15(03f808cdd997cee9,a)..  - 100*Q(a) + AR(03f808cdd997cee9,a) =G= -100 ; (LHS = 0)
-     
-const15(03f808cdd997cee9,b)..  - 100*Q(b) + AR(03f808cdd997cee9,b) =G= -100 ; (LHS = 0)
-     
-const15(03f808cdd997cee9,c)..  - 100*Q(c) + AR(03f808cdd997cee9,c) =G= -100 ; (LHS = 0)
-     
-REMAINING 9 ENTRIES SKIPPED
-
-
----- const16  =L=  
-
-const16(03f808cdd997cee9,a)..  100*Q(a) + AR(03f808cdd997cee9,a) =L= 112 ; (LHS = 0)
-     
-const16(03f808cdd997cee9,b)..  100*Q(b) + AR(03f808cdd997cee9,b) =L= 112 ; (LHS = 0)
-     
-const16(03f808cdd997cee9,c)..  100*Q(c) + AR(03f808cdd997cee9,c) =L= 112 ; (LHS = 0)
-     
-REMAINING 9 ENTRIES SKIPPED
-
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 14
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE simple Using MINLP From line 227
-
-
----- const17  =E=  constraints 13&14&15&16: setting time variables
-
-const17(a)..  E(a) + Q(a) + T(a) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-const17(b)..  E(b) + Q(b) + T(b) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-const17(c)..  E(c) + Q(c) + T(c) =E= 1 ; (LHS = 0, INFES = 1 ****)
+StkCon1(03f808cdd997cee9,Strawberry)..  RLoad(DCS,03f808cdd997cee9,Strawberry) =E= 0 ; (LHS = 0)
      
 REMAINING 3 ENTRIES SKIPPED
 
 
----- const18  =E=  constraint 18: shelf life calculations
+---- StkCon2  =E=  
 
-const18(DCS,03f808cdd997cee9,Banana)..  (0.0257000871887629)*AR(03f808cdd997cee9,DCS) + (0.0870721476014821)*rank(DCS,03f808cdd997cee9) + (0.166619684199414)*temp(03f808cdd997cee9) + SL(DCS,03f808cdd997cee9,Banana) =E= 0 ;
-     
-      (LHS = -3.73060011863708, INFES = 3.73060011863708 ****)
-     
-const18(DCS,03f808cdd997cee9,Broccoli)..  (0.323200469651017)*AR(03f808cdd997cee9,DCS) + (0.365765582614594)*rank(DCS,03f808cdd997cee9) + (0.20724804874257)*temp(03f808cdd997cee9) + SL(DCS,03f808cdd997cee9,Broccoli) =E= 0 ;
-     
-      (LHS = -5.95574998855591, INFES = 5.95574998855591 ****)
-     
-const18(DCS,03f808cdd997cee9,Strawberry)..  (0.0833507432374481)*AR(03f808cdd997cee9,DCS) + (0.00952241999148892)*rank(DCS,03f808cdd997cee9) + (0.0146637390240639)*temp(03f808cdd997cee9) + SL(DCS,03f808cdd997cee9,Strawberry) =E= 0 ;
-     
-      (LHS = -2.81561994552612, INFES = 2.81561994552612 ****)
-     
-REMAINING 39 ENTRIES SKIPPED
+                NONE
 
 
----- const19  =G=  constraint 19: minimum requirement for shelf life
+---- StkCon3  =G=  
 
-const19(a,03f808cdd997cee9,Banana)..  SL(a,03f808cdd997cee9,Banana) =G= 1.5 ; (LHS = 0, INFES = 1.5 ****)
+StkCon3(DCS,a,03f808cdd997cee9,Banana)..  (0)*X(DCS,a,03f808cdd997cee9) + RLoad(DCS,03f808cdd997cee9,Banana) + (0)*RLoad(a,03f808cdd997cee9,Banana) =G= 0 ; (LHS = 0)
      
-const19(a,03f808cdd997cee9,Broccoli)..  SL(a,03f808cdd997cee9,Broccoli) =G= 2 ; (LHS = 0, INFES = 2 ****)
+StkCon3(DCS,a,03f808cdd997cee9,Broccoli)..  (0)*X(DCS,a,03f808cdd997cee9) + RLoad(DCS,03f808cdd997cee9,Broccoli) + (0)*RLoad(a,03f808cdd997cee9,Broccoli) =G= 0 ; (LHS = 0)
      
-const19(a,03f808cdd997cee9,Strawberry)..  SL(a,03f808cdd997cee9,Strawberry) =G= 1 ; (LHS = 0, INFES = 1 ****)
-     
-REMAINING 27 ENTRIES SKIPPED
-
-
----- const20  =G=  
-
-const20(03f808cdd997cee9)..  temp(03f808cdd997cee9) =G= 0 ; (LHS = 0)
-     
-const20(551d181c465cf86f)..  temp(551d181c465cf86f) =G= 0 ; (LHS = 0)
-     
-
----- const21  =L=  constraints 20&21: controlling truck temperature
-
-const21(03f808cdd997cee9)..  temp(03f808cdd997cee9) =L= 4 ; (LHS = 0)
-     
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 15
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                               11/21/20 07:38:46 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE simple Using MINLP From line 227
+Equation Listing    SOLVE simple Using MINLP From line 261
 
 
-     const21  =L=  constraints 20&21: controlling truck temperature
+     StkCon3  =G=  
 
-const21(551d181c465cf86f)..  temp(551d181c465cf86f) =L= 4 ; (LHS = 0)
+StkCon3(DCS,a,03f808cdd997cee9,Strawberry)..  (0)*X(DCS,a,03f808cdd997cee9) + RLoad(DCS,03f808cdd997cee9,Strawberry) + (0)*RLoad(a,03f808cdd997cee9,Strawberry) =G= 0 ; (LHS = 0)
      
+REMAINING 21 ENTRIES SKIPPED
 
----- const22  =L=  Restricting the rank of DCE
 
-const22(03f808cdd997cee9)..  - X(DCS,a,03f808cdd997cee9) - X(DCS,b,03f808cdd997cee9) - X(DCS,c,03f808cdd997cee9) - X(DCS,d,03f808cdd997cee9) - X(DCS,e,03f808cdd997cee9) - X(DCS,DCE,03f808cdd997cee9) - X(a,a,03f808cdd997cee9) - X(a,b,03f808cdd997cee9)
+---- StkCon4  =E=  
+
+                NONE
+
+
+---- TrkCon1  =E=  
+
+TrkCon1(03f808cdd997cee9)..  Y(03f808cdd997cee9) - NTD(03f808cdd997cee9) =E= 0 ; (LHS = 0)
      
-      - X(a,c,03f808cdd997cee9) - X(a,d,03f808cdd997cee9) - X(a,e,03f808cdd997cee9) - X(a,DCE,03f808cdd997cee9) - X(b,a,03f808cdd997cee9) - X(b,b,03f808cdd997cee9) - X(b,c,03f808cdd997cee9) - X(b,d,03f808cdd997cee9) - X(b,e,03f808cdd997cee9)
-     
-      - X(b,DCE,03f808cdd997cee9) - X(c,a,03f808cdd997cee9) - X(c,b,03f808cdd997cee9) - X(c,c,03f808cdd997cee9) - X(c,d,03f808cdd997cee9) - X(c,e,03f808cdd997cee9) - X(c,DCE,03f808cdd997cee9) - X(d,a,03f808cdd997cee9) - X(d,b,03f808cdd997cee9)
-     
-      - X(d,c,03f808cdd997cee9) - X(d,d,03f808cdd997cee9) - X(d,e,03f808cdd997cee9) - X(d,DCE,03f808cdd997cee9) - X(e,a,03f808cdd997cee9) - X(e,b,03f808cdd997cee9) - X(e,c,03f808cdd997cee9) - X(e,d,03f808cdd997cee9) - X(e,e,03f808cdd997cee9)
-     
-      - X(e,DCE,03f808cdd997cee9) + rank(DCE,03f808cdd997cee9) =L= 0 ; (LHS = 0)
-     
-const22(551d181c465cf86f)..  - X(DCS,a,551d181c465cf86f) - X(DCS,b,551d181c465cf86f) - X(DCS,c,551d181c465cf86f) - X(DCS,d,551d181c465cf86f) - X(DCS,e,551d181c465cf86f) - X(DCS,DCE,551d181c465cf86f) - X(a,a,551d181c465cf86f) - X(a,b,551d181c465cf86f)
-     
-      - X(a,c,551d181c465cf86f) - X(a,d,551d181c465cf86f) - X(a,e,551d181c465cf86f) - X(a,DCE,551d181c465cf86f) - X(b,a,551d181c465cf86f) - X(b,b,551d181c465cf86f) - X(b,c,551d181c465cf86f) - X(b,d,551d181c465cf86f) - X(b,e,551d181c465cf86f)
-     
-      - X(b,DCE,551d181c465cf86f) - X(c,a,551d181c465cf86f) - X(c,b,551d181c465cf86f) - X(c,c,551d181c465cf86f) - X(c,d,551d181c465cf86f) - X(c,e,551d181c465cf86f) - X(c,DCE,551d181c465cf86f) - X(d,a,551d181c465cf86f) - X(d,b,551d181c465cf86f)
-     
-      - X(d,c,551d181c465cf86f) - X(d,d,551d181c465cf86f) - X(d,e,551d181c465cf86f) - X(d,DCE,551d181c465cf86f) - X(e,a,551d181c465cf86f) - X(e,b,551d181c465cf86f) - X(e,c,551d181c465cf86f) - X(e,d,551d181c465cf86f) - X(e,e,551d181c465cf86f)
-     
-      - X(e,DCE,551d181c465cf86f) + rank(DCE,551d181c465cf86f) =L= 0 ; (LHS = 0)
+TrkCon1(551d181c465cf86f)..  Y(551d181c465cf86f) - NTD(551d181c465cf86f) =E= 0 ; (LHS = 0)
      
 
----- const24  =L=  
+---- TrkCon2  =L=  
 
-const24(03f808cdd997cee9,DCS)..  - 100*X(DCS,DCS,03f808cdd997cee9) - 100*X(a,DCS,03f808cdd997cee9) - 100*X(b,DCS,03f808cdd997cee9) - 100*X(c,DCS,03f808cdd997cee9) - 100*X(d,DCS,03f808cdd997cee9) - 100*X(e,DCS,03f808cdd997cee9) + AR(03f808cdd997cee9,DCS)
-      =L= 0 ; (LHS = 0)
+TrkCon2(03f808cdd997cee9)..  - Y(03f808cdd997cee9) + Y(551d181c465cf86f) =L= 0 ; (LHS = 0)
      
-const24(03f808cdd997cee9,a)..  - 100*X(DCS,a,03f808cdd997cee9) - 100*X(a,a,03f808cdd997cee9) - 100*X(b,a,03f808cdd997cee9) - 100*X(c,a,03f808cdd997cee9) - 100*X(d,a,03f808cdd997cee9) - 100*X(e,a,03f808cdd997cee9) + AR(03f808cdd997cee9,a) =L= 0 ; (LHS = 0)
+TrkCon2(551d181c465cf86f)..  - Y(551d181c465cf86f) =L= 0 ; (LHS = 0)
      
-const24(03f808cdd997cee9,b)..  - 100*X(DCS,b,03f808cdd997cee9) - 100*X(a,b,03f808cdd997cee9) - 100*X(b,b,03f808cdd997cee9) - 100*X(c,b,03f808cdd997cee9) - 100*X(d,b,03f808cdd997cee9) - 100*X(e,b,03f808cdd997cee9) + AR(03f808cdd997cee9,b) =L= 0 ; (LHS = 0)
-     
-REMAINING 11 ENTRIES SKIPPED
 
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 16
+---- QualCon1  =E=  
+
+QualCon1(a,03f808cdd997cee9,Banana)..  (0.0258510192757711)*AR(03f808cdd997cee9,a) + (0.0875835069934271)*rank(a,03f808cdd997cee9) + (0.167598212267749)*temp(03f808cdd997cee9) + SL(a,03f808cdd997cee9,Banana) =E= 0 ;
+     
+      (LHS = -3.7525092762817, INFES = 3.7525092762817 ****)
+     
+QualCon1(a,03f808cdd997cee9,Broccoli)..  (0.338457895500376)*AR(03f808cdd997cee9,a) + (0.383032393089887)*rank(a,03f808cdd997cee9) + (0.217031672323094)*temp(03f808cdd997cee9) + SL(a,03f808cdd997cee9,Broccoli) =E= 0 ;
+     
+      (LHS = -6.23690494456766, INFES = 6.23690494456766 ****)
+     
+QualCon1(a,03f808cdd997cee9,Strawberry)..  (0.0858550584050284)*AR(03f808cdd997cee9,a) + (0.00980852590837103)*rank(a,03f808cdd997cee9) + (0.0151043184673303)*temp(03f808cdd997cee9) + SL(a,03f808cdd997cee9,Strawberry) =E= 0 ;
+     
+      (LHS = -2.90021666850477, INFES = 2.90021666850477 ****)
+     
+REMAINING 9 ENTRIES SKIPPED
+
+
+---- QualCon2  =G=  
+
+QualCon2(a,03f808cdd997cee9,Banana)..  SL(a,03f808cdd997cee9,Banana) =G= 1.5 ; (LHS = 0, INFES = 1.5 ****)
+     
+QualCon2(a,03f808cdd997cee9,Broccoli)..  SL(a,03f808cdd997cee9,Broccoli) =G= 2 ; (LHS = 0, INFES = 2 ****)
+     
+QualCon2(a,03f808cdd997cee9,Strawberry)..  SL(a,03f808cdd997cee9,Strawberry) =G= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 10
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE simple Using MINLP From line 227
+Equation Listing    SOLVE simple Using MINLP From line 261
+
+
+---- QualCon3  =E=  
+
+QualCon3(03f808cdd997cee9,Banana)..  SL(DCS,03f808cdd997cee9,Banana) =E= 3.73060011863708 ; (LHS = 0, INFES = 3.73060011863708 ****)
+     
+QualCon3(03f808cdd997cee9,Broccoli)..  SL(DCS,03f808cdd997cee9,Broccoli) =E= 5.95574998855591 ; (LHS = 0, INFES = 5.95574998855591 ****)
+     
+QualCon3(03f808cdd997cee9,Strawberry)..  SL(DCS,03f808cdd997cee9,Strawberry) =E= 2.81561994552612 ; (LHS = 0, INFES = 2.81561994552612 ****)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+
+---- QualCon4  =G=  
+
+QualCon4(03f808cdd997cee9)..  temp(03f808cdd997cee9) =G= 0 ; (LHS = 0)
+     
+QualCon4(551d181c465cf86f)..  temp(551d181c465cf86f) =G= 0 ; (LHS = 0)
+     
+
+---- QualCon5  =L=  
+
+QualCon5(03f808cdd997cee9)..  temp(03f808cdd997cee9) =L= 4 ; (LHS = 0)
+     
+QualCon5(551d181c465cf86f)..  temp(551d181c465cf86f) =L= 4 ; (LHS = 0)
+     
+
+---- TransCon1  =L=  
+
+TransCon1(03f808cdd997cee9)..  6*X(DCS,a,03f808cdd997cee9) + 6*X(a,a,03f808cdd997cee9) - 10*Y(03f808cdd997cee9) =L= 0 ; (LHS = 0)
+     
+TransCon1(551d181c465cf86f)..  6*X(DCS,a,551d181c465cf86f) + 6*X(a,a,551d181c465cf86f) - 10*Y(551d181c465cf86f) =L= 0 ; (LHS = 0)
+     
+
+---- TransCon2  =E=  
+
+TransCon2(a)..  X(DCS,a,03f808cdd997cee9) + X(DCS,a,551d181c465cf86f) + X(a,a,03f808cdd997cee9) + X(a,a,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- TransCon3  =E=  
+
+TransCon3(a)..  X(a,a,03f808cdd997cee9) + X(a,a,551d181c465cf86f) + X(a,DCE,03f808cdd997cee9) + X(a,DCE,551d181c465cf86f) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- TransCon4  =E=  
+
+TransCon4(a,03f808cdd997cee9)..  X(DCS,a,03f808cdd997cee9) - X(a,DCE,03f808cdd997cee9) =E= 0 ; (LHS = 0)
+     
+TransCon4(a,551d181c465cf86f)..  X(DCS,a,551d181c465cf86f) - X(a,DCE,551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE simple Using MINLP From line 261
+
+
+---- TransCon5  =E=  
+
+TransCon5(03f808cdd997cee9)..  X(DCS,a,03f808cdd997cee9) - Y(03f808cdd997cee9) =E= 0 ; (LHS = 0)
+     
+TransCon5(551d181c465cf86f)..  X(DCS,a,551d181c465cf86f) - Y(551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- TransCon6  =E=  
+
+TransCon6(03f808cdd997cee9)..  X(a,DCE,03f808cdd997cee9) - Y(03f808cdd997cee9) =E= 0 ; (LHS = 0)
+     
+TransCon6(551d181c465cf86f)..  X(a,DCE,551d181c465cf86f) - Y(551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- TransCon7  =E=  
+
+TransCon7..  X(DCS,DCS,03f808cdd997cee9) + X(DCS,DCS,551d181c465cf86f) + X(a,DCS,03f808cdd997cee9) + X(a,DCS,551d181c465cf86f) + X(DCE,DCS,03f808cdd997cee9) + X(DCE,DCS,551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- TransCon8  =E=  
+
+TransCon8..  X(DCE,DCS,03f808cdd997cee9) + X(DCE,DCS,551d181c465cf86f) + X(DCE,a,03f808cdd997cee9) + X(DCE,a,551d181c465cf86f) + X(DCE,DCE,03f808cdd997cee9) + X(DCE,DCE,551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- TransCon9  =E=  
+
+TransCon9..  X(DCS,DCE,03f808cdd997cee9) + X(DCS,DCE,551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- TransCon10  =E=  
+
+                NONE
+
+
+---- TransCon11  =G=  
+
+TransCon11(a,DCS,03f808cdd997cee9)..  - 1000*X(DCS,a,03f808cdd997cee9) - rank(DCS,03f808cdd997cee9) + rank(a,03f808cdd997cee9) =G= -999 ; (LHS = 0)
+     
+TransCon11(a,DCS,551d181c465cf86f)..  - 1000*X(DCS,a,551d181c465cf86f) - rank(DCS,551d181c465cf86f) + rank(a,551d181c465cf86f) =G= -999 ; (LHS = 0)
+     
+TransCon11(a,a,03f808cdd997cee9)..  - 1000*X(a,a,03f808cdd997cee9) =G= -999 ; (LHS = 0)
+     
+REMAINING 5 ENTRIES SKIPPED
+
+
+---- TransCon12  =L=  
+
+TransCon12(03f808cdd997cee9)..  - X(DCS,a,03f808cdd997cee9) - X(DCS,DCE,03f808cdd997cee9) - X(a,a,03f808cdd997cee9) - X(a,DCE,03f808cdd997cee9) + rank(DCE,03f808cdd997cee9) =L= 0 ; (LHS = 0)
+     
+TransCon12(551d181c465cf86f)..  - X(DCS,a,551d181c465cf86f) - X(DCS,DCE,551d181c465cf86f) - X(a,a,551d181c465cf86f) - X(a,DCE,551d181c465cf86f) + rank(DCE,551d181c465cf86f) =L= 0 ; (LHS = 0)
+     
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE simple Using MINLP From line 261
+
+
+---- TransCon13  =E=  
+
+TransCon13(03f808cdd997cee9)..  rank(DCS,03f808cdd997cee9) =E= 0 ; (LHS = 0)
+     
+TransCon13(551d181c465cf86f)..  rank(DCS,551d181c465cf86f) =E= 0 ; (LHS = 0)
+     
+
+---- ArrivalCon1  =G=  
+
+ArrivalCon1(a,DCS,03f808cdd997cee9)..  - 1000*X(DCS,a,03f808cdd997cee9) - AR(03f808cdd997cee9,DCS) + AR(03f808cdd997cee9,a) =G= -999.996944444444 ; (LHS = 0)
+     
+ArrivalCon1(a,DCS,551d181c465cf86f)..  - 1000*X(DCS,a,551d181c465cf86f) - AR(551d181c465cf86f,DCS) + AR(551d181c465cf86f,a) =G= -999.996944444444 ; (LHS = 0)
+     
+ArrivalCon1(a,a,03f808cdd997cee9)..  - 1000*X(a,a,03f808cdd997cee9) =G= -999.7 ; (LHS = 0)
+     
+REMAINING 5 ENTRIES SKIPPED
+
+
+---- ArrivalCon2  =E=  
+
+ArrivalCon2(03f808cdd997cee9)..  - Y(03f808cdd997cee9) + AR(03f808cdd997cee9,DCS) =E= 0 ; (LHS = 0)
+     
+ArrivalCon2(551d181c465cf86f)..  - Y(551d181c465cf86f) + AR(551d181c465cf86f,DCS) =E= 0 ; (LHS = 0)
+     
+
+---- ArrivalCon3  =L=  
+
+ArrivalCon3(03f808cdd997cee9,a)..  1000*E(a) + AR(03f808cdd997cee9,a) =L= 1002 ; (LHS = 0)
+     
+ArrivalCon3(03f808cdd997cee9,DCE)..  1000*E(DCE) + AR(03f808cdd997cee9,DCE) =L= 1001 ; (LHS = 0)
+     
+ArrivalCon3(551d181c465cf86f,a)..  1000*E(a) + AR(551d181c465cf86f,a) =L= 1002 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- ArrivalCon4  =G=  
+
+ArrivalCon4(03f808cdd997cee9,a)..  - 1000*T(a) + AR(03f808cdd997cee9,a) =G= -988 ; (LHS = 0)
+     
+ArrivalCon4(03f808cdd997cee9,DCE)..  - 1000*T(DCE) + AR(03f808cdd997cee9,DCE) =G= -982 ; (LHS = 0)
+     
+ArrivalCon4(551d181c465cf86f,a)..  - 1000*T(a) + AR(551d181c465cf86f,a) =G= -988 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- ArrivalCon5  =G=  
+
+ArrivalCon5(03f808cdd997cee9,a)..  - 1000*Q(a) + AR(03f808cdd997cee9,a) =G= -998 ; (LHS = 0)
+     
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE simple Using MINLP From line 261
+
+
+     ArrivalCon5  =G=  
+
+ArrivalCon5(03f808cdd997cee9,DCE)..  - 1000*Q(DCE) + AR(03f808cdd997cee9,DCE) =G= -999 ; (LHS = 0)
+     
+ArrivalCon5(551d181c465cf86f,a)..  - 1000*Q(a) + AR(551d181c465cf86f,a) =G= -998 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- ArrivalCon6  =L=  
+
+ArrivalCon6(03f808cdd997cee9,a)..  1000*Q(a) + AR(03f808cdd997cee9,a) =L= 1012 ; (LHS = 0)
+     
+ArrivalCon6(03f808cdd997cee9,DCE)..  1000*Q(DCE) + AR(03f808cdd997cee9,DCE) =L= 1018 ; (LHS = 0)
+     
+ArrivalCon6(551d181c465cf86f,a)..  1000*Q(a) + AR(551d181c465cf86f,a) =L= 1012 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- ArrivalCon7  =E=  
+
+ArrivalCon7(a)..  E(a) + Q(a) + T(a) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+ArrivalCon7(DCE)..  E(DCE) + Q(DCE) + T(DCE) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE simple Using MINLP From line 261
 
 
 ---- Cost  total cost
@@ -767,7 +676,7 @@ Cost
 tCost
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
        -1       OF
-        1       eq1
+        1       CostComp1
 
 
 ---- dCost  cost for distance traveled
@@ -775,7 +684,7 @@ tCost
 dCost
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
        -1       OF
-        1       eq2
+        1       CostComp3
 
 
 ---- qCost  cost for quality lost
@@ -783,7 +692,7 @@ dCost
 qCost
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
        -1       OF
-        1       eq3
+        1       CostComp4
 
 
 ---- eCost  cost for arriving early
@@ -791,7 +700,7 @@ qCost
 eCost
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
        -1       OF
-        1       eq4
+        1       CostComp8
 
 
 ---- lCost  cost for arriving late
@@ -799,7 +708,7 @@ eCost
 lCost
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
        -1       OF
-        1       eq5
+        1       CostComp7
 
 
 ---- sCost  quality cost of surplus
@@ -807,10 +716,10 @@ lCost
 sCost
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
        -1       OF
-        1       eq9
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 17
+        1       CostComp5
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 15
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE simple Using MINLP From line 227
+Column Listing      SOLVE simple Using MINLP From line 261
 
 
      sCost  quality cost of surplus
@@ -821,18 +730,18 @@ Column Listing      SOLVE simple Using MINLP From line 227
 
 surplus(03f808cdd997cee9,Banana)
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
-        1       eq8(03f808cdd997cee9,Banana)
-      (-1.1901) eq9
+      (-1.0947) CostComp5
+        1       CostComp9(03f808cdd997cee9,Banana)
 
 surplus(03f808cdd997cee9,Broccoli)
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
-        1       eq8(03f808cdd997cee9,Broccoli)
-      (-2.3929) eq9
+      (-2.2475) CostComp5
+        1       CostComp9(03f808cdd997cee9,Broccoli)
 
 surplus(03f808cdd997cee9,Strawberry)
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
-        1       eq8(03f808cdd997cee9,Strawberry)
-     (-17.9395) eq9
+     (-16.6758) CostComp5
+        1       CostComp9(03f808cdd997cee9,Strawberry)
 
 REMAINING 3 ENTRIES SKIPPED
 
@@ -840,521 +749,348 @@ REMAINING 3 ENTRIES SKIPPED
 
 X(DCS,DCS,03f808cdd997cee9)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-       (0)      eq2
-        1       const8
-     -100       const24(03f808cdd997cee9,DCS)
+       (0)      CostComp3
+        1       TransCon7
 
 X(DCS,DCS,551d181c465cf86f)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-       (0)      eq2
-        1       const8
-     -100       const24(551d181c465cf86f,DCS)
+       (0)      CostComp3
+        1       TransCon7
 
 X(DCS,a,03f808cdd997cee9)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-       (0)      eq2
-     (-60)      eq3
-        3       const2(03f808cdd997cee9,Banana)
-        3       const2(03f808cdd997cee9,Broccoli)
-        6       const2a(03f808cdd997cee9)
-        1       const3(a)
-        1       const5(a,03f808cdd997cee9)
-        1       const6(03f808cdd997cee9)
-       -7       const11(a,DCS,03f808cdd997cee9)
-     -100       const12(a,DCS,03f808cdd997cee9)
-       -1       const22(03f808cdd997cee9)
-     -100       const24(03f808cdd997cee9,a)
+       (0)      CostComp3
+     (-60)      CostComp4
+       -3       StkCon1(03f808cdd997cee9,Banana)
+       -3       StkCon1(03f808cdd997cee9,Broccoli)
+       (0)      StkCon3(DCS,a,03f808cdd997cee9,Banana)
+       (0)      StkCon3(DCS,a,03f808cdd997cee9,Broccoli)
+       (0)      StkCon3(DCS,a,03f808cdd997cee9,Strawberry)
+        6       TransCon1(03f808cdd997cee9)
+        1       TransCon2(a)
+        1       TransCon4(a,03f808cdd997cee9)
+        1       TransCon5(03f808cdd997cee9)
+    -1000       TransCon11(a,DCS,03f808cdd997cee9)
+       -1       TransCon12(03f808cdd997cee9)
+    -1000       ArrivalCon1(a,DCS,03f808cdd997cee9)
 
-REMAINING 95 ENTRIES SKIPPED
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 18
+REMAINING 15 ENTRIES SKIPPED
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 16
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE simple Using MINLP From line 227
+Column Listing      SOLVE simple Using MINLP From line 261
 
 
 ---- Y  using truck k
 
 Y(03f808cdd997cee9)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-       -1       eq0(03f808cdd997cee9)
-     -200       eq1
-      -10       const2(03f808cdd997cee9,Banana)
-      -10       const2(03f808cdd997cee9,Broccoli)
-      -10       const2(03f808cdd997cee9,Strawberry)
-       -1       const6(03f808cdd997cee9)
-       -1       const7(03f808cdd997cee9)
+     -200       CostComp1
+        1       TrkCon1(03f808cdd997cee9)
+       -1       TrkCon2(03f808cdd997cee9)
+      -10       TransCon1(03f808cdd997cee9)
+       -1       TransCon5(03f808cdd997cee9)
+       -1       TransCon6(03f808cdd997cee9)
+       -1       ArrivalCon2(03f808cdd997cee9)
 
 Y(551d181c465cf86f)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-        1       eq0(03f808cdd997cee9)
-       -1       eq0(551d181c465cf86f)
-     -200       eq1
-      -10       const2(551d181c465cf86f,Banana)
-      -10       const2(551d181c465cf86f,Broccoli)
-      -10       const2(551d181c465cf86f,Strawberry)
-       -1       const6(551d181c465cf86f)
-       -1       const7(551d181c465cf86f)
+     -200       CostComp1
+        1       TrkCon1(551d181c465cf86f)
+        1       TrkCon2(03f808cdd997cee9)
+       -1       TrkCon2(551d181c465cf86f)
+      -10       TransCon1(551d181c465cf86f)
+       -1       TransCon5(551d181c465cf86f)
+       -1       TransCon6(551d181c465cf86f)
+       -1       ArrivalCon2(551d181c465cf86f)
+
+
+---- NTD  New Trucks Deployed
+
+NTD(03f808cdd997cee9)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       TrkCon1(03f808cdd997cee9)
+
+NTD(551d181c465cf86f)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       TrkCon1(551d181c465cf86f)
 
 
 ---- E  arriving early at location j
 
 E(a)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-       (0)      eq4
-      100       const13(03f808cdd997cee9,a)
-      100       const13(551d181c465cf86f,a)
-        1       const17(a)
+    (-104)      CostComp8
+     1000       ArrivalCon3(03f808cdd997cee9,a)
+     1000       ArrivalCon3(551d181c465cf86f,a)
+        1       ArrivalCon7(a)
 
-E(b)
+E(DCE)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-       (0)      eq4
-      100       const13(03f808cdd997cee9,b)
-      100       const13(551d181c465cf86f,b)
-        1       const17(b)
+     1000       ArrivalCon3(03f808cdd997cee9,DCE)
+     1000       ArrivalCon3(551d181c465cf86f,DCE)
+        1       ArrivalCon7(DCE)
 
-E(c)
-                (.LO, .L, .UP, .M = 0, 0, 1, 0)
-       (0)      eq4
-      100       const13(03f808cdd997cee9,c)
-      100       const13(551d181c465cf86f,c)
-        1       const17(c)
-
-REMAINING 3 ENTRIES SKIPPED
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 19
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 17
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE simple Using MINLP From line 227
+Column Listing      SOLVE simple Using MINLP From line 261
 
 
 ---- Q  arriving on time at location j
 
 Q(a)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-     -100       const15(03f808cdd997cee9,a)
-     -100       const15(551d181c465cf86f,a)
-      100       const16(03f808cdd997cee9,a)
-      100       const16(551d181c465cf86f,a)
-        1       const17(a)
+    -1000       ArrivalCon5(03f808cdd997cee9,a)
+    -1000       ArrivalCon5(551d181c465cf86f,a)
+     1000       ArrivalCon6(03f808cdd997cee9,a)
+     1000       ArrivalCon6(551d181c465cf86f,a)
+        1       ArrivalCon7(a)
 
-Q(b)
+Q(DCE)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-     -100       const15(03f808cdd997cee9,b)
-     -100       const15(551d181c465cf86f,b)
-      100       const16(03f808cdd997cee9,b)
-      100       const16(551d181c465cf86f,b)
-        1       const17(b)
+    -1000       ArrivalCon5(03f808cdd997cee9,DCE)
+    -1000       ArrivalCon5(551d181c465cf86f,DCE)
+     1000       ArrivalCon6(03f808cdd997cee9,DCE)
+     1000       ArrivalCon6(551d181c465cf86f,DCE)
+        1       ArrivalCon7(DCE)
 
-Q(c)
-                (.LO, .L, .UP, .M = 0, 0, 1, 0)
-     -100       const15(03f808cdd997cee9,c)
-     -100       const15(551d181c465cf86f,c)
-      100       const16(03f808cdd997cee9,c)
-      100       const16(551d181c465cf86f,c)
-        1       const17(c)
-
-REMAINING 3 ENTRIES SKIPPED
 
 ---- T  arriving late at location j
 
 T(a)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-     (234)      eq5
-     -100       const14(03f808cdd997cee9,a)
-     -100       const14(551d181c465cf86f,a)
-        1       const17(a)
+    -1000       ArrivalCon4(03f808cdd997cee9,a)
+    -1000       ArrivalCon4(551d181c465cf86f,a)
+        1       ArrivalCon7(a)
 
-T(b)
+T(DCE)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-     (238)      eq5
-     -100       const14(03f808cdd997cee9,b)
-     -100       const14(551d181c465cf86f,b)
-        1       const17(b)
-
-T(c)
-                (.LO, .L, .UP, .M = 0, 0, 1, 0)
-     (237)      eq5
-     -100       const14(03f808cdd997cee9,c)
-     -100       const14(551d181c465cf86f,c)
-        1       const17(c)
-
-REMAINING 3 ENTRIES SKIPPED
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 20
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE simple Using MINLP From line 227
+    -1000       ArrivalCon4(03f808cdd997cee9,DCE)
+    -1000       ArrivalCon4(551d181c465cf86f,DCE)
+        1       ArrivalCon7(DCE)
 
 
 ---- AR  arrival time of truck k at location j
 
 AR(03f808cdd997cee9,DCS)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-       -1       const12(a,DCS,03f808cdd997cee9)
-       -1       const12(b,DCS,03f808cdd997cee9)
-       -1       const12(c,DCS,03f808cdd997cee9)
-       -1       const12(d,DCS,03f808cdd997cee9)
-       -1       const12(e,DCS,03f808cdd997cee9)
-       -1       const12(DCE,DCS,03f808cdd997cee9)
-        1       const12a(03f808cdd997cee9)
-       (0.0257) const18(DCS,03f808cdd997cee9,Banana)
-       (0.3232) const18(DCS,03f808cdd997cee9,Broccoli)
-       (0.0834) const18(DCS,03f808cdd997cee9,Strawberry)
-        1       const24(03f808cdd997cee9,DCS)
+       -1       ArrivalCon1(a,DCS,03f808cdd997cee9)
+       -1       ArrivalCon1(DCE,DCS,03f808cdd997cee9)
+        1       ArrivalCon2(03f808cdd997cee9)
 
 AR(03f808cdd997cee9,a)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-       (0)      eq4
-       (0)      eq5
-        1       const12(a,DCS,03f808cdd997cee9)
-        1       const12(a,b,03f808cdd997cee9)
-        1       const12(a,c,03f808cdd997cee9)
-        1       const12(a,d,03f808cdd997cee9)
-        1       const12(a,e,03f808cdd997cee9)
-       -1       const12(b,a,03f808cdd997cee9)
-       -1       const12(c,a,03f808cdd997cee9)
-       -1       const12(d,a,03f808cdd997cee9)
-       -1       const12(e,a,03f808cdd997cee9)
-       -1       const12(DCE,a,03f808cdd997cee9)
-        1       const13(03f808cdd997cee9,a)
-        1       const14(03f808cdd997cee9,a)
-        1       const15(03f808cdd997cee9,a)
-        1       const16(03f808cdd997cee9,a)
-       (0.0257) const18(a,03f808cdd997cee9,Banana)
-       (0.3232) const18(a,03f808cdd997cee9,Broccoli)
-       (0.0834) const18(a,03f808cdd997cee9,Strawberry)
-        1       const24(03f808cdd997cee9,a)
-
-AR(03f808cdd997cee9,b)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-       (0)      eq4
-       (0)      eq5
-       -1       const12(a,b,03f808cdd997cee9)
-        1       const12(b,DCS,03f808cdd997cee9)
-        1       const12(b,a,03f808cdd997cee9)
-        1       const12(b,c,03f808cdd997cee9)
-        1       const12(b,d,03f808cdd997cee9)
-        1       const12(b,e,03f808cdd997cee9)
-       -1       const12(c,b,03f808cdd997cee9)
-       -1       const12(d,b,03f808cdd997cee9)
-       -1       const12(e,b,03f808cdd997cee9)
-       -1       const12(DCE,b,03f808cdd997cee9)
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 21
+       (0)      CostComp8
+       (0.0259) QualCon1(a,03f808cdd997cee9,Banana)
+       (0.3385) QualCon1(a,03f808cdd997cee9,Broccoli)
+       (0.0859) QualCon1(a,03f808cdd997cee9,Strawberry)
+        1       ArrivalCon1(a,DCS,03f808cdd997cee9)
+       -1       ArrivalCon1(DCE,a,03f808cdd997cee9)
+        1       ArrivalCon3(03f808cdd997cee9,a)
+        1       ArrivalCon4(03f808cdd997cee9,a)
+        1       ArrivalCon5(03f808cdd997cee9,a)
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 18
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE simple Using MINLP From line 227
+Column Listing      SOLVE simple Using MINLP From line 261
 
 
      AR  arrival time of truck k at location j
 
-        1       const13(03f808cdd997cee9,b)
-        1       const14(03f808cdd997cee9,b)
-        1       const15(03f808cdd997cee9,b)
-        1       const16(03f808cdd997cee9,b)
-       (0.0257) const18(b,03f808cdd997cee9,Banana)
-       (0.3232) const18(b,03f808cdd997cee9,Broccoli)
-       (0.0834) const18(b,03f808cdd997cee9,Strawberry)
-        1       const24(03f808cdd997cee9,b)
+        1       ArrivalCon6(03f808cdd997cee9,a)
 
-REMAINING 11 ENTRIES SKIPPED
+AR(03f808cdd997cee9,DCE)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      CostComp5
+       (0.0259) QualCon1(DCE,03f808cdd997cee9,Banana)
+       (0.3412) QualCon1(DCE,03f808cdd997cee9,Broccoli)
+       (0.0859) QualCon1(DCE,03f808cdd997cee9,Strawberry)
+        1       ArrivalCon1(DCE,DCS,03f808cdd997cee9)
+        1       ArrivalCon1(DCE,a,03f808cdd997cee9)
+        1       ArrivalCon3(03f808cdd997cee9,DCE)
+        1       ArrivalCon4(03f808cdd997cee9,DCE)
+        1       ArrivalCon5(03f808cdd997cee9,DCE)
+        1       ArrivalCon6(03f808cdd997cee9,DCE)
 
----- rank  for subtour elimination constraint
+REMAINING 3 ENTRIES SKIPPED
+
+---- RLoad  The stock of product b in truck k at location j
+
+RLoad(DCS,03f808cdd997cee9,Banana)
+                (.LO, .L, .UP, .M = 0, 0, 10, 0)
+        1       StkCon1(03f808cdd997cee9,Banana)
+        1       StkCon3(DCS,a,03f808cdd997cee9,Banana)
+        1       StkCon3(DCS,DCE,03f808cdd997cee9,Banana)
+
+RLoad(DCS,03f808cdd997cee9,Broccoli)
+                (.LO, .L, .UP, .M = 0, 0, 10, 0)
+        1       StkCon1(03f808cdd997cee9,Broccoli)
+        1       StkCon3(DCS,a,03f808cdd997cee9,Broccoli)
+        1       StkCon3(DCS,DCE,03f808cdd997cee9,Broccoli)
+
+RLoad(DCS,03f808cdd997cee9,Strawberry)
+                (.LO, .L, .UP, .M = 0, 0, 10, 0)
+        1       StkCon1(03f808cdd997cee9,Strawberry)
+        1       StkCon3(DCS,a,03f808cdd997cee9,Strawberry)
+        1       StkCon3(DCS,DCE,03f808cdd997cee9,Strawberry)
+
+REMAINING 15 ENTRIES SKIPPED
+
+---- rank  subtour elimination constraint
 
 rank(DCS,03f808cdd997cee9)
-                (.LO, .L, .UP, .M = 0, 0, 100, 0)
-       -1       const11(a,DCS,03f808cdd997cee9)
-       -1       const11(b,DCS,03f808cdd997cee9)
-       -1       const11(c,DCS,03f808cdd997cee9)
-       -1       const11(d,DCS,03f808cdd997cee9)
-       -1       const11(e,DCS,03f808cdd997cee9)
-       -1       const11(DCE,DCS,03f808cdd997cee9)
-        1       const11a(03f808cdd997cee9)
-       (0.0871) const18(DCS,03f808cdd997cee9,Banana)
-       (0.3658) const18(DCS,03f808cdd997cee9,Broccoli)
-       (0.0095) const18(DCS,03f808cdd997cee9,Strawberry)
+                (.LO, .L, .UP, .M = 0, 0, 4, 0)
+       -1       TransCon11(a,DCS,03f808cdd997cee9)
+       -1       TransCon11(DCE,DCS,03f808cdd997cee9)
+        1       TransCon13(03f808cdd997cee9)
 
 rank(DCS,551d181c465cf86f)
-                (.LO, .L, .UP, .M = 0, 0, 100, 0)
-       -1       const11(a,DCS,551d181c465cf86f)
-       -1       const11(b,DCS,551d181c465cf86f)
-       -1       const11(c,DCS,551d181c465cf86f)
-       -1       const11(d,DCS,551d181c465cf86f)
-       -1       const11(e,DCS,551d181c465cf86f)
-       -1       const11(DCE,DCS,551d181c465cf86f)
-        1       const11a(551d181c465cf86f)
-       (0.0871) const18(DCS,551d181c465cf86f,Banana)
-       (0.3658) const18(DCS,551d181c465cf86f,Broccoli)
-       (0.0095) const18(DCS,551d181c465cf86f,Strawberry)
+                (.LO, .L, .UP, .M = 0, 0, 4, 0)
+       -1       TransCon11(a,DCS,551d181c465cf86f)
+       -1       TransCon11(DCE,DCS,551d181c465cf86f)
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE simple Using MINLP From line 261
+
+
+     rank  subtour elimination constraint
+
+        1       TransCon13(551d181c465cf86f)
 
 rank(a,03f808cdd997cee9)
-                (.LO, .L, .UP, .M = 0, 0, 100, 0)
-        1       const11(a,DCS,03f808cdd997cee9)
-        1       const11(a,b,03f808cdd997cee9)
-        1       const11(a,c,03f808cdd997cee9)
-        1       const11(a,d,03f808cdd997cee9)
-        1       const11(a,e,03f808cdd997cee9)
-       -1       const11(b,a,03f808cdd997cee9)
-       -1       const11(c,a,03f808cdd997cee9)
-       -1       const11(d,a,03f808cdd997cee9)
-       -1       const11(e,a,03f808cdd997cee9)
-       -1       const11(DCE,a,03f808cdd997cee9)
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 22
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE simple Using MINLP From line 227
+                (.LO, .L, .UP, .M = 0, 0, 4, 0)
+       (0.0876) QualCon1(a,03f808cdd997cee9,Banana)
+       (0.383)  QualCon1(a,03f808cdd997cee9,Broccoli)
+       (0.0098) QualCon1(a,03f808cdd997cee9,Strawberry)
+        1       TransCon11(a,DCS,03f808cdd997cee9)
+       -1       TransCon11(DCE,a,03f808cdd997cee9)
 
-
-     rank  for subtour elimination constraint
-
-       (0.0871) const18(a,03f808cdd997cee9,Banana)
-       (0.3658) const18(a,03f808cdd997cee9,Broccoli)
-       (0.0095) const18(a,03f808cdd997cee9,Strawberry)
-
-REMAINING 11 ENTRIES SKIPPED
+REMAINING 3 ENTRIES SKIPPED
 
 ---- temp  temperature of truck k
 
 temp(03f808cdd997cee9)
                 (.LO, .L, .UP, .M = 0, 0, 100, 0)
-        1       eq6(03f808cdd997cee9)
-       (0)      eq9
-       (0.1666) const18(DCS,03f808cdd997cee9,Banana)
-       (0.2072) const18(DCS,03f808cdd997cee9,Broccoli)
-       (0.0147) const18(DCS,03f808cdd997cee9,Strawberry)
-       (0.1666) const18(a,03f808cdd997cee9,Banana)
-       (0.2072) const18(a,03f808cdd997cee9,Broccoli)
-       (0.0147) const18(a,03f808cdd997cee9,Strawberry)
-       (0.1666) const18(b,03f808cdd997cee9,Banana)
-       (0.2072) const18(b,03f808cdd997cee9,Broccoli)
-       (0.0147) const18(b,03f808cdd997cee9,Strawberry)
-       (0.1666) const18(c,03f808cdd997cee9,Banana)
-       (0.2072) const18(c,03f808cdd997cee9,Broccoli)
-       (0.0147) const18(c,03f808cdd997cee9,Strawberry)
-       (0.1666) const18(d,03f808cdd997cee9,Banana)
-       (0.2072) const18(d,03f808cdd997cee9,Broccoli)
-       (0.0147) const18(d,03f808cdd997cee9,Strawberry)
-       (0.1666) const18(e,03f808cdd997cee9,Banana)
-       (0.2072) const18(e,03f808cdd997cee9,Broccoli)
-       (0.0147) const18(e,03f808cdd997cee9,Strawberry)
-       (0.1666) const18(DCE,03f808cdd997cee9,Banana)
-       (0.2072) const18(DCE,03f808cdd997cee9,Broccoli)
-       (0.0147) const18(DCE,03f808cdd997cee9,Strawberry)
-        1       const20(03f808cdd997cee9)
-        1       const21(03f808cdd997cee9)
+       (0)      CostComp5
+        1       CostComp6(03f808cdd997cee9)
+       (0.1676) QualCon1(a,03f808cdd997cee9,Banana)
+       (0.217)  QualCon1(a,03f808cdd997cee9,Broccoli)
+       (0.0151) QualCon1(a,03f808cdd997cee9,Strawberry)
+       (0.1678) QualCon1(DCE,03f808cdd997cee9,Banana)
+       (0.2188) QualCon1(DCE,03f808cdd997cee9,Broccoli)
+       (0.0151) QualCon1(DCE,03f808cdd997cee9,Strawberry)
+        1       QualCon4(03f808cdd997cee9)
+        1       QualCon5(03f808cdd997cee9)
 
 temp(551d181c465cf86f)
                 (.LO, .L, .UP, .M = 0, 0, 100, 0)
-        1       eq6(551d181c465cf86f)
-       (0)      eq9
-       (0.1666) const18(DCS,551d181c465cf86f,Banana)
-       (0.2072) const18(DCS,551d181c465cf86f,Broccoli)
-       (0.0147) const18(DCS,551d181c465cf86f,Strawberry)
-       (0.1666) const18(a,551d181c465cf86f,Banana)
-       (0.2072) const18(a,551d181c465cf86f,Broccoli)
-       (0.0147) const18(a,551d181c465cf86f,Strawberry)
-       (0.1666) const18(b,551d181c465cf86f,Banana)
-       (0.2072) const18(b,551d181c465cf86f,Broccoli)
-       (0.0147) const18(b,551d181c465cf86f,Strawberry)
-       (0.1666) const18(c,551d181c465cf86f,Banana)
-       (0.2072) const18(c,551d181c465cf86f,Broccoli)
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 23
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE simple Using MINLP From line 227
-
-
-     temp  temperature of truck k
-
-       (0.0147) const18(c,551d181c465cf86f,Strawberry)
-       (0.1666) const18(d,551d181c465cf86f,Banana)
-       (0.2072) const18(d,551d181c465cf86f,Broccoli)
-       (0.0147) const18(d,551d181c465cf86f,Strawberry)
-       (0.1666) const18(e,551d181c465cf86f,Banana)
-       (0.2072) const18(e,551d181c465cf86f,Broccoli)
-       (0.0147) const18(e,551d181c465cf86f,Strawberry)
-       (0.1666) const18(DCE,551d181c465cf86f,Banana)
-       (0.2072) const18(DCE,551d181c465cf86f,Broccoli)
-       (0.0147) const18(DCE,551d181c465cf86f,Strawberry)
-        1       const20(551d181c465cf86f)
-        1       const21(551d181c465cf86f)
+       (0)      CostComp5
+        1       CostComp6(551d181c465cf86f)
+       (0.1676) QualCon1(a,551d181c465cf86f,Banana)
+       (0.217)  QualCon1(a,551d181c465cf86f,Broccoli)
+       (0.0151) QualCon1(a,551d181c465cf86f,Strawberry)
+       (0.1678) QualCon1(DCE,551d181c465cf86f,Banana)
+       (0.2188) QualCon1(DCE,551d181c465cf86f,Broccoli)
+       (0.0151) QualCon1(DCE,551d181c465cf86f,Strawberry)
+        1       QualCon4(551d181c465cf86f)
+        1       QualCon5(551d181c465cf86f)
 
 
 ---- SL  shelf life of product b at customer j
 
 SL(DCS,03f808cdd997cee9,Banana)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-        1       const18(DCS,03f808cdd997cee9,Banana)
+        1       QualCon3(03f808cdd997cee9,Banana)
 
 SL(DCS,03f808cdd997cee9,Broccoli)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-        1       const18(DCS,03f808cdd997cee9,Broccoli)
+        1       QualCon3(03f808cdd997cee9,Broccoli)
+
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE simple Using MINLP From line 261
+
+
+     SL  shelf life of product b at customer j
 
 SL(DCS,03f808cdd997cee9,Strawberry)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-        1       const18(DCS,03f808cdd997cee9,Strawberry)
+        1       QualCon3(03f808cdd997cee9,Strawberry)
 
-REMAINING 39 ENTRIES SKIPPED
+REMAINING 15 ENTRIES SKIPPED
 
 ---- rg  refrigeration cost of truck k
 
 rg(03f808cdd997cee9)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-        1       eq6(03f808cdd997cee9)
-       -0.3031  eq7(DCS,a,03f808cdd997cee9)
-       -0.1242  eq7(DCS,b,03f808cdd997cee9)
-       -0.1742  eq7(DCS,c,03f808cdd997cee9)
-       -0.2253  eq7(DCS,d,03f808cdd997cee9)
-       -0.1092  eq7(DCS,e,03f808cdd997cee9)
-       -0.0036  eq7(a,DCS,03f808cdd997cee9)
-       -0.3     eq7(a,a,03f808cdd997cee9)
-       -0.1211  eq7(a,b,03f808cdd997cee9)
-       -0.1711  eq7(a,c,03f808cdd997cee9)
-       -0.2286  eq7(a,d,03f808cdd997cee9)
-       -0.1125  eq7(a,e,03f808cdd997cee9)
-       -0.0036  eq7(a,DCE,03f808cdd997cee9)
-       -0.0203  eq7(b,DCS,03f808cdd997cee9)
-       -0.3167  eq7(b,a,03f808cdd997cee9)
-       -0.1     eq7(b,b,03f808cdd997cee9)
-       -0.1586  eq7(b,c,03f808cdd997cee9)
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 24
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE simple Using MINLP From line 227
-
-
-     rg  refrigeration cost of truck k
-
-       -0.2436  eq7(b,d,03f808cdd997cee9)
-       -0.1269  eq7(b,e,03f808cdd997cee9)
-       -0.0203  eq7(b,DCE,03f808cdd997cee9)
-       -0.0261  eq7(c,DCS,03f808cdd997cee9)
-       -0.3225  eq7(c,a,03f808cdd997cee9)
-       -0.1197  eq7(c,b,03f808cdd997cee9)
-       -0.15    eq7(c,c,03f808cdd997cee9)
-       -0.235   eq7(c,d,03f808cdd997cee9)
-       -0.135   eq7(c,e,03f808cdd997cee9)
-       -0.0261  eq7(c,DCE,03f808cdd997cee9)
-       -0.0253  eq7(d,DCS,03f808cdd997cee9)
-       -0.3283  eq7(d,a,03f808cdd997cee9)
-       -0.1417  eq7(d,b,03f808cdd997cee9)
-       -0.1814  eq7(d,c,03f808cdd997cee9)
-       -0.2     eq7(d,d,03f808cdd997cee9)
-       -0.1239  eq7(d,e,03f808cdd997cee9)
-       -0.0253  eq7(d,DCE,03f808cdd997cee9)
-       -0.0064  eq7(e,DCS,03f808cdd997cee9)
-       -0.3094  eq7(e,a,03f808cdd997cee9)
-       -0.1178  eq7(e,b,03f808cdd997cee9)
-       -0.1806  eq7(e,c,03f808cdd997cee9)
-       -0.2214  eq7(e,d,03f808cdd997cee9)
-       -0.1     eq7(e,e,03f808cdd997cee9)
-       -0.0064  eq7(e,DCE,03f808cdd997cee9)
-       -0.3031  eq7(DCE,a,03f808cdd997cee9)
-       -0.1242  eq7(DCE,b,03f808cdd997cee9)
-       -0.1742  eq7(DCE,c,03f808cdd997cee9)
-       -0.2253  eq7(DCE,d,03f808cdd997cee9)
-       -0.1092  eq7(DCE,e,03f808cdd997cee9)
+       -0.3031  CostComp2(DCS,a,03f808cdd997cee9)
+       -0.0036  CostComp2(a,DCS,03f808cdd997cee9)
+       -0.3     CostComp2(a,a,03f808cdd997cee9)
+       -0.0036  CostComp2(a,DCE,03f808cdd997cee9)
+       -0.3031  CostComp2(DCE,a,03f808cdd997cee9)
+        1       CostComp6(03f808cdd997cee9)
 
 rg(551d181c465cf86f)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-        1       eq6(551d181c465cf86f)
-       -0.3031  eq7(DCS,a,551d181c465cf86f)
-       -0.1242  eq7(DCS,b,551d181c465cf86f)
-       -0.1742  eq7(DCS,c,551d181c465cf86f)
-       -0.2253  eq7(DCS,d,551d181c465cf86f)
-       -0.1092  eq7(DCS,e,551d181c465cf86f)
-       -0.0036  eq7(a,DCS,551d181c465cf86f)
-       -0.3     eq7(a,a,551d181c465cf86f)
-       -0.1211  eq7(a,b,551d181c465cf86f)
-       -0.1711  eq7(a,c,551d181c465cf86f)
-       -0.2286  eq7(a,d,551d181c465cf86f)
-       -0.1125  eq7(a,e,551d181c465cf86f)
-       -0.0036  eq7(a,DCE,551d181c465cf86f)
-       -0.0203  eq7(b,DCS,551d181c465cf86f)
-       -0.3167  eq7(b,a,551d181c465cf86f)
-       -0.1     eq7(b,b,551d181c465cf86f)
-       -0.1586  eq7(b,c,551d181c465cf86f)
-       -0.2436  eq7(b,d,551d181c465cf86f)
-       -0.1269  eq7(b,e,551d181c465cf86f)
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 25
-G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE simple Using MINLP From line 227
-
-
-     rg  refrigeration cost of truck k
-
-       -0.0203  eq7(b,DCE,551d181c465cf86f)
-       -0.0261  eq7(c,DCS,551d181c465cf86f)
-       -0.3225  eq7(c,a,551d181c465cf86f)
-       -0.1197  eq7(c,b,551d181c465cf86f)
-       -0.15    eq7(c,c,551d181c465cf86f)
-       -0.235   eq7(c,d,551d181c465cf86f)
-       -0.135   eq7(c,e,551d181c465cf86f)
-       -0.0261  eq7(c,DCE,551d181c465cf86f)
-       -0.0253  eq7(d,DCS,551d181c465cf86f)
-       -0.3283  eq7(d,a,551d181c465cf86f)
-       -0.1417  eq7(d,b,551d181c465cf86f)
-       -0.1814  eq7(d,c,551d181c465cf86f)
-       -0.2     eq7(d,d,551d181c465cf86f)
-       -0.1239  eq7(d,e,551d181c465cf86f)
-       -0.0253  eq7(d,DCE,551d181c465cf86f)
-       -0.0064  eq7(e,DCS,551d181c465cf86f)
-       -0.3094  eq7(e,a,551d181c465cf86f)
-       -0.1178  eq7(e,b,551d181c465cf86f)
-       -0.1806  eq7(e,c,551d181c465cf86f)
-       -0.2214  eq7(e,d,551d181c465cf86f)
-       -0.1     eq7(e,e,551d181c465cf86f)
-       -0.0064  eq7(e,DCE,551d181c465cf86f)
-       -0.3031  eq7(DCE,a,551d181c465cf86f)
-       -0.1242  eq7(DCE,b,551d181c465cf86f)
-       -0.1742  eq7(DCE,c,551d181c465cf86f)
-       -0.2253  eq7(DCE,d,551d181c465cf86f)
-       -0.1092  eq7(DCE,e,551d181c465cf86f)
+       -0.3031  CostComp2(DCS,a,551d181c465cf86f)
+       -0.0036  CostComp2(a,DCS,551d181c465cf86f)
+       -0.3     CostComp2(a,a,551d181c465cf86f)
+       -0.0036  CostComp2(a,DCE,551d181c465cf86f)
+       -0.3031  CostComp2(DCE,a,551d181c465cf86f)
+        1       CostComp6(551d181c465cf86f)
 
 
 ---- C  cost of traveling from i to j using truck k
 
 C(DCS,DCS,03f808cdd997cee9)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-       (0)      eq2
-        1       eq7(DCS,DCS,03f808cdd997cee9)
+        1       CostComp2(DCS,DCS,03f808cdd997cee9)
+       (0)      CostComp3
 
 C(DCS,DCS,551d181c465cf86f)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-       (0)      eq2
-        1       eq7(DCS,DCS,551d181c465cf86f)
+        1       CostComp2(DCS,DCS,551d181c465cf86f)
+       (0)      CostComp3
 
 C(DCS,a,03f808cdd997cee9)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-       (0)      eq2
-        1       eq7(DCS,a,03f808cdd997cee9)
+        1       CostComp2(DCS,a,03f808cdd997cee9)
+       (0)      CostComp3
 
-REMAINING 95 ENTRIES SKIPPED
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 26
+REMAINING 15 ENTRIES SKIPPED
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 21
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE simple Using MINLP From line 227
+Model Statistics    SOLVE simple Using MINLP From line 261
 
 
 MODEL STATISTICS
 
-BLOCKS OF EQUATIONS          36     SINGLE EQUATIONS          444
-BLOCKS OF VARIABLES          19     SINGLE VARIABLES          303
-NON ZERO ELEMENTS         1,849     NON LINEAR N-Z            451
-DERIVATIVE POOL              20     CONSTANT POOL              52
-CODE LENGTH               1,766     DISCRETE VARIABLES        134
+BLOCKS OF EQUATIONS          41     SINGLE EQUATIONS          148
+BLOCKS OF VARIABLES          21     SINGLE VARIABLES          111
+NON ZERO ELEMENTS           405     NON LINEAR N-Z            145
+DERIVATIVE POOL              20     CONSTANT POOL              47
+CODE LENGTH                 524     DISCRETE VARIABLES         36
 
 
-GENERATION TIME      =        0.031 SECONDS      4 MB  31.1.1 r4b06116 WEX-WEI
+GENERATION TIME      =        0.016 SECONDS      4 MB  31.1.1 r4b06116 WEX-WEI
 
 
-EXECUTION TIME       =        0.031 SECONDS      4 MB  31.1.1 r4b06116 WEX-WEI
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 27
+EXECUTION TIME       =        0.016 SECONDS      4 MB  31.1.1 r4b06116 WEX-WEI
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 22
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE simple Using MINLP From line 227
+Solution Report     SOLVE simple Using MINLP From line 261
 
 
                S O L V E      S U M M A R Y
 
      MODEL   simple              OBJECTIVE  Cost
      TYPE    MINLP               DIRECTION  MINIMIZE
-     SOLVER  BARON               FROM LINE  227
+     SOLVER  BARON               FROM LINE  261
 
 **** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      19 Infeasible - No Solution 
-**** OBJECTIVE VALUE               NA
+**** MODEL STATUS      8 Integer Solution          
+**** OBJECTIVE VALUE              215.7386
 
- RESOURCE USAGE, LIMIT          0.040      1000.000
- ITERATION COUNT, LIMIT        NA    2000000000
+ RESOURCE USAGE, LIMIT          0.050      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
  EVALUATION ERRORS              0             0
 
 GAMS/BARON       31.1.1 r4b06116 Released May 16, 2020 WEI x86 64bit/MS Window
@@ -1380,15 +1116,594 @@ University of Illinois at Urbana-Champaign.
  This BARON run may utilize the following subsolver(s)
  For LP/MIP/QP: ILOG CPLEX                                      
  For NLP: MINOS, SNOPT, GAMS external NLP, IPOPT, FILTERSD, FILTERSQP
-*** Could not extract solution on D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\225a\res.dat file
 
-No solution returned
-GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/02/20 19:50:30 Page 28
+Solution      = 215.738637369502  best solution found during preprocessing
+Best possible = 213.474638179
+Absolute gap  = 2.26399919050175  optca = 1E-9
+Relative gap  = 0.0104941758143403  optcr = 0.1
+  (Note that BARON uses a different formula to compute the relative gap as
+   was used for the above reported value.)
+
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU OF                  .              .              .          
+---- EQU CostComp1           .              .              .          
+
+  OF  objective function
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 23
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+---- EQU CostComp2  
+
+                                LOWER          LEVEL          UPPER
+
+DCS.DCS.03f808cdd997cee9          .              .              .          
+DCS.DCS.551d181c465cf86f          .              .              .          
+DCS.a  .03f808cdd997cee9         8.0353         8.0353         8.0353      
+DCS.a  .551d181c465cf86f         8.0353         8.0353         8.0353      
+DCS.DCE.03f808cdd997cee9          .              .              .          
+DCS.DCE.551d181c465cf86f          .              .              .          
+a  .DCS.03f808cdd997cee9         0.2781         0.2781         0.2781      
+a  .DCS.551d181c465cf86f         0.2781         0.2781         0.2781      
+a  .a  .03f808cdd997cee9         7.8000         7.8000         7.8000      
+a  .a  .551d181c465cf86f         7.8000         7.8000         7.8000      
+a  .DCE.03f808cdd997cee9         0.2781         0.2781         0.2781      
+a  .DCE.551d181c465cf86f         0.2781         0.2781         0.2781      
+DCE.DCS.03f808cdd997cee9          .              .              .          
+DCE.DCS.551d181c465cf86f          .              .              .          
+DCE.a  .03f808cdd997cee9         8.0353         8.0353         8.0353      
+DCE.a  .551d181c465cf86f         8.0353         8.0353         8.0353      
+DCE.DCE.03f808cdd997cee9          .              .              .          
+DCE.DCE.551d181c465cf86f          .              .              .          
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU CostComp3           .              .              .          
+---- EQU CostComp4           .              .              .          
+---- EQU CostComp5           .              .              .          
+
+---- EQU CostComp6  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9        14.0000        14.0000        14.0000      
+551d181c465cf86f        14.0000        14.0000        14.0000      
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU CostComp7           .              .              .          
+---- EQU CostComp8           .              .              .          
+
+---- EQU CostComp9  
+
+                                   LOWER          LEVEL          UPPER
+
+03f808cdd997cee9.Banana              .              .              .          
+03f808cdd997cee9.Broccoli            .              .              .          
+03f808cdd997cee9.Strawberry          .              .              .          
+551d181c465cf86f.Banana              .              .              .          
+551d181c465cf86f.Broccoli            .              .              .          
+551d181c465cf86f.Strawberry          .              .              .          
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 24
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+---- EQU StkCon1  
+
+                                   LOWER          LEVEL          UPPER
+
+03f808cdd997cee9.Banana              .              .              .          
+03f808cdd997cee9.Broccoli            .              .              .          
+03f808cdd997cee9.Strawberry          .              .              .          
+551d181c465cf86f.Banana              .              .              .          
+551d181c465cf86f.Broccoli            .              .              .          
+551d181c465cf86f.Strawberry          .              .              .          
+
+---- EQU StkCon2  
+
+                NONE
+
+
+---- EQU StkCon3  
+
+                                           LOWER          LEVEL          UPPER
+
+DCS.a  .03f808cdd997cee9.Banana              .              .            +INF         
+DCS.a  .03f808cdd997cee9.Broccoli            .              .            +INF         
+DCS.a  .03f808cdd997cee9.Strawberry          .              .            +INF         
+DCS.a  .551d181c465cf86f.Banana              .              .            +INF         
+DCS.a  .551d181c465cf86f.Broccoli            .              .            +INF         
+DCS.a  .551d181c465cf86f.Strawberry          .              .            +INF         
+DCS.DCE.03f808cdd997cee9.Banana              .             3.0000        +INF         
+DCS.DCE.03f808cdd997cee9.Broccoli            .             3.0000        +INF         
+DCS.DCE.03f808cdd997cee9.Strawberry          .              .            +INF         
+DCS.DCE.551d181c465cf86f.Banana              .              .            +INF         
+DCS.DCE.551d181c465cf86f.Broccoli            .              .            +INF         
+DCS.DCE.551d181c465cf86f.Strawberry          .              .            +INF         
+a  .a  .03f808cdd997cee9.Banana              .             3.0000        +INF         
+a  .a  .03f808cdd997cee9.Broccoli            .             3.0000        +INF         
+a  .a  .03f808cdd997cee9.Strawberry          .              .            +INF         
+a  .a  .551d181c465cf86f.Banana              .              .            +INF         
+a  .a  .551d181c465cf86f.Broccoli            .              .            +INF         
+a  .a  .551d181c465cf86f.Strawberry          .              .            +INF         
+a  .DCE.03f808cdd997cee9.Banana              .              .            +INF         
+a  .DCE.03f808cdd997cee9.Broccoli            .              .            +INF         
+a  .DCE.03f808cdd997cee9.Strawberry          .              .            +INF         
+a  .DCE.551d181c465cf86f.Banana              .              .            +INF         
+a  .DCE.551d181c465cf86f.Broccoli            .              .            +INF         
+a  .DCE.551d181c465cf86f.Strawberry          .              .            +INF         
+
+---- EQU StkCon4  
+
+                NONE
+
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 25
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+---- EQU TrkCon1  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9          .              .              .          
+551d181c465cf86f          .              .              .          
+
+---- EQU TrkCon2  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9        -INF           -1.0000          .          
+551d181c465cf86f        -INF             .              .          
+
+---- EQU QualCon1  
+
+                                       LOWER          LEVEL          UPPER
+
+a  .03f808cdd997cee9.Banana              .              .              .          
+a  .03f808cdd997cee9.Broccoli            .              .              .          
+a  .03f808cdd997cee9.Strawberry          .              .              .          
+a  .551d181c465cf86f.Banana              .              .              .          
+a  .551d181c465cf86f.Broccoli            .              .              .          
+a  .551d181c465cf86f.Strawberry          .              .              .          
+DCE.03f808cdd997cee9.Banana              .              .              .          
+DCE.03f808cdd997cee9.Broccoli            .              .              .          
+DCE.03f808cdd997cee9.Strawberry          .              .              .          
+DCE.551d181c465cf86f.Banana              .              .              .          
+DCE.551d181c465cf86f.Broccoli            .              .              .          
+DCE.551d181c465cf86f.Strawberry          .              .              .          
+
+---- EQU QualCon2  
+
+                                     LOWER          LEVEL          UPPER
+
+a.03f808cdd997cee9.Banana             1.5000         3.6158        +INF         
+a.03f808cdd997cee9.Broccoli           2.0000         5.2621        +INF         
+a.03f808cdd997cee9.Strawberry         1.0000         2.7243        +INF         
+a.551d181c465cf86f.Banana             1.5000         3.4548        +INF         
+a.551d181c465cf86f.Broccoli           2.0000         3.2520        +INF         
+a.551d181c465cf86f.Strawberry         1.0000         2.0331        +INF         
+
+---- EQU QualCon3  
+
+                                   LOWER          LEVEL          UPPER
+
+03f808cdd997cee9.Banana             3.7306         3.7306         3.7306      
+03f808cdd997cee9.Broccoli           5.9557         5.9557         5.9557      
+03f808cdd997cee9.Strawberry         2.8156         2.8156         2.8156      
+551d181c465cf86f.Banana             3.7306         3.7306         3.7306      
+551d181c465cf86f.Broccoli           5.9557         5.9557         5.9557      
+551d181c465cf86f.Strawberry         2.8156         2.8156         2.8156      
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 26
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+---- EQU QualCon4  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9          .              .            +INF         
+551d181c465cf86f          .              .            +INF         
+
+---- EQU QualCon5  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9        -INF             .             4.0000      
+551d181c465cf86f        -INF             .             4.0000      
+
+---- EQU TransCon1  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9        -INF           -4.0000          .          
+551d181c465cf86f        -INF             .              .          
+
+---- EQU TransCon2  
+
+         LOWER          LEVEL          UPPER
+
+a         1.0000         1.0000         1.0000      
+
+---- EQU TransCon3  
+
+         LOWER          LEVEL          UPPER
+
+a         1.0000         1.0000         1.0000      
+
+---- EQU TransCon4  
+
+                          LOWER          LEVEL          UPPER
+
+a.03f808cdd997cee9          .              .              .          
+a.551d181c465cf86f          .              .              .          
+
+---- EQU TransCon5  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9          .              .              .          
+551d181c465cf86f          .              .              .          
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 27
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+---- EQU TransCon6  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9          .              .              .          
+551d181c465cf86f          .              .              .          
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU TransCon7           .              .              .          
+---- EQU TransCon8           .              .              .          
+---- EQU TransCon9           .              .              .          
+
+---- EQU TransCon10  
+
+                NONE
+
+
+---- EQU TransCon11  
+
+                                LOWER          LEVEL          UPPER
+
+a  .DCS.03f808cdd997cee9      -999.0000      -999.0000        +INF         
+a  .DCS.551d181c465cf86f      -999.0000          .            +INF         
+a  .a  .03f808cdd997cee9      -999.0000          .            +INF         
+a  .a  .551d181c465cf86f      -999.0000          .            +INF         
+DCE.DCS.03f808cdd997cee9      -999.0000         2.0000        +INF         
+DCE.DCS.551d181c465cf86f      -999.0000          .            +INF         
+DCE.a  .03f808cdd997cee9      -999.0000      -999.0000        +INF         
+DCE.a  .551d181c465cf86f      -999.0000          .            +INF         
+
+---- EQU TransCon12  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9        -INF             .              .          
+551d181c465cf86f        -INF             .              .          
+
+---- EQU TransCon13  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9          .              .              .          
+551d181c465cf86f          .              .              .          
+
+---- EQU ArrivalCon1  
+
+                                LOWER          LEVEL          UPPER
+
+a  .DCS.03f808cdd997cee9      -999.9969      -999.0000        +INF         
+a  .DCS.551d181c465cf86f      -999.9969        12.0000        +INF         
+a  .a  .03f808cdd997cee9      -999.7000          .            +INF         
+a  .a  .551d181c465cf86f      -999.7000          .            +INF         
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 28
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+     EQU ArrivalCon1  
+
+                                LOWER          LEVEL          UPPER
+
+DCE.DCS.03f808cdd997cee9     -1000.0000      1000.0000        +INF         
+DCE.DCS.551d181c465cf86f     -1000.0000        18.0000        +INF         
+DCE.a  .03f808cdd997cee9      -999.6964        -1.0000        +INF         
+DCE.a  .551d181c465cf86f      -999.6964         6.0000        +INF         
+
+---- EQU ArrivalCon2  
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9          .              .              .          
+551d181c465cf86f          .              .              .          
+
+---- EQU ArrivalCon3  
+
+                            LOWER          LEVEL          UPPER
+
+03f808cdd997cee9.a          -INF            2.0000      1002.0000      
+03f808cdd997cee9.DCE        -INF         1001.0000      1001.0000      
+551d181c465cf86f.a          -INF           12.0000      1002.0000      
+551d181c465cf86f.DCE        -INF           18.0000      1001.0000      
+
+---- EQU ArrivalCon4  
+
+                            LOWER          LEVEL          UPPER
+
+03f808cdd997cee9.a        -988.0000         2.0000        +INF         
+03f808cdd997cee9.DCE      -982.0000         1.0000        +INF         
+551d181c465cf86f.a        -988.0000        12.0000        +INF         
+551d181c465cf86f.DCE      -982.0000      -982.0000        +INF         
+
+---- EQU ArrivalCon5  
+
+                            LOWER          LEVEL          UPPER
+
+03f808cdd997cee9.a        -998.0000      -998.0000        +INF         
+03f808cdd997cee9.DCE      -999.0000      1001.0000        +INF         
+551d181c465cf86f.a        -998.0000      -988.0000        +INF         
+551d181c465cf86f.DCE      -999.0000        18.0000        +INF         
+
+---- EQU ArrivalCon6  
+
+                            LOWER          LEVEL          UPPER
+
+03f808cdd997cee9.a          -INF         1002.0000      1012.0000      
+03f808cdd997cee9.DCE        -INF         1001.0000      1018.0000      
+551d181c465cf86f.a          -INF         1012.0000      1012.0000      
+551d181c465cf86f.DCE        -INF           18.0000      1018.0000      
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 29
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+---- EQU ArrivalCon7  
+
+           LOWER          LEVEL          UPPER
+
+a           1.0000         1.0000         1.0000      
+DCE         1.0000         1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER
+
+---- VAR Cost              -INF          215.7386        +INF         
+---- VAR tCost             -INF          200.0000        +INF         
+---- VAR dCost             -INF           12.6067        +INF         
+---- VAR qCost             -INF            3.1320        +INF         
+---- VAR eCost             -INF             .            +INF         
+---- VAR lCost             -INF             .            +INF         
+---- VAR sCost             -INF             .            +INF         
+
+  Cost  total cost
+  tCost  cost for using trucks
+  dCost  cost for distance traveled
+  qCost  cost for quality lost
+  eCost  cost for arriving early
+  lCost  cost for arriving late
+  sCost  quality cost of surplus
+
+---- VAR surplus  amount of surplus in truck k of product b
+
+                                   LOWER          LEVEL          UPPER
+
+03f808cdd997cee9.Banana            -INF             .            +INF         
+03f808cdd997cee9.Broccoli          -INF             .            +INF         
+03f808cdd997cee9.Strawberry        -INF             .            +INF         
+551d181c465cf86f.Banana            -INF             .            +INF         
+551d181c465cf86f.Broccoli          -INF             .            +INF         
+551d181c465cf86f.Strawberry        -INF             .            +INF         
+
+---- VAR X  traveling from i to j using truck k
+
+                                LOWER          LEVEL          UPPER
+
+DCS.DCS.03f808cdd997cee9          .              .             1.0000      
+DCS.DCS.551d181c465cf86f          .              .             1.0000      
+DCS.a  .03f808cdd997cee9          .             1.0000         1.0000      
+DCS.a  .551d181c465cf86f          .              .             1.0000      
+DCS.DCE.03f808cdd997cee9          .              .             1.0000      
+DCS.DCE.551d181c465cf86f          .              .             1.0000      
+a  .DCS.03f808cdd997cee9          .              .             1.0000      
+a  .DCS.551d181c465cf86f          .              .             1.0000      
+a  .a  .03f808cdd997cee9          .              .             1.0000      
+a  .a  .551d181c465cf86f          .              .             1.0000      
+a  .DCE.03f808cdd997cee9          .             1.0000         1.0000      
+a  .DCE.551d181c465cf86f          .              .             1.0000      
+DCE.DCS.03f808cdd997cee9          .              .             1.0000      
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 30
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+     VAR X  traveling from i to j using truck k
+
+                                LOWER          LEVEL          UPPER
+
+DCE.DCS.551d181c465cf86f          .              .             1.0000      
+DCE.a  .03f808cdd997cee9          .              .             1.0000      
+DCE.a  .551d181c465cf86f          .              .             1.0000      
+DCE.DCE.03f808cdd997cee9          .              .             1.0000      
+DCE.DCE.551d181c465cf86f          .              .             1.0000      
+
+---- VAR Y  using truck k
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9          .             1.0000         1.0000      
+551d181c465cf86f          .              .             1.0000      
+
+---- VAR NTD  New Trucks Deployed
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9          .             1.0000         1.0000      
+551d181c465cf86f          .              .             1.0000      
+
+---- VAR E  arriving early at location j
+
+           LOWER          LEVEL          UPPER
+
+a            .              .             1.0000      
+DCE          .              .             1.0000      
+
+---- VAR Q  arriving on time at location j
+
+           LOWER          LEVEL          UPPER
+
+a            .             1.0000         1.0000      
+DCE          .              .             1.0000      
+
+---- VAR T  arriving late at location j
+
+           LOWER          LEVEL          UPPER
+
+a            .              .             1.0000      
+DCE          .             1.0000         1.0000      
+
+---- VAR AR  arrival time of truck k at location j
+
+                            LOWER          LEVEL          UPPER
+
+03f808cdd997cee9.DCS          .             1.0000        +INF         
+03f808cdd997cee9.a            .             2.0000        +INF         
+03f808cdd997cee9.DCE          .          1001.0000        +INF         
+551d181c465cf86f.DCS          .              .            +INF         
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 31
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+     VAR AR  arrival time of truck k at location j
+
+                            LOWER          LEVEL          UPPER
+
+551d181c465cf86f.a            .            12.0000        +INF         
+551d181c465cf86f.DCE          .            18.0000        +INF         
+
+---- VAR RLoad  The stock of product b in truck k at location j
+
+                                       LOWER          LEVEL          UPPER
+
+DCS.03f808cdd997cee9.Banana              .             3.0000        10.0000      
+DCS.03f808cdd997cee9.Broccoli            .             3.0000        10.0000      
+DCS.03f808cdd997cee9.Strawberry          .              .            10.0000      
+DCS.551d181c465cf86f.Banana              .              .            10.0000      
+DCS.551d181c465cf86f.Broccoli            .              .            10.0000      
+DCS.551d181c465cf86f.Strawberry          .              .            10.0000      
+a  .03f808cdd997cee9.Banana              .             3.0000        10.0000      
+a  .03f808cdd997cee9.Broccoli            .             3.0000        10.0000      
+a  .03f808cdd997cee9.Strawberry          .              .            10.0000      
+a  .551d181c465cf86f.Banana              .              .            10.0000      
+a  .551d181c465cf86f.Broccoli            .              .            10.0000      
+a  .551d181c465cf86f.Strawberry          .              .            10.0000      
+DCE.03f808cdd997cee9.Banana              .              .            10.0000      
+DCE.03f808cdd997cee9.Broccoli            .              .            10.0000      
+DCE.03f808cdd997cee9.Strawberry          .              .            10.0000      
+DCE.551d181c465cf86f.Banana              .              .            10.0000      
+DCE.551d181c465cf86f.Broccoli            .              .            10.0000      
+DCE.551d181c465cf86f.Strawberry          .              .            10.0000      
+
+---- VAR rank  subtour elimination constraint
+
+                            LOWER          LEVEL          UPPER
+
+DCS.03f808cdd997cee9          .              .             4.0000      
+DCS.551d181c465cf86f          .              .             4.0000      
+a  .03f808cdd997cee9          .             1.0000         4.0000      
+a  .551d181c465cf86f          .              .             4.0000      
+DCE.03f808cdd997cee9          .             2.0000         4.0000      
+DCE.551d181c465cf86f          .              .             4.0000      
+
+---- VAR temp  temperature of truck k
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9          .              .           100.0000      
+551d181c465cf86f          .              .           100.0000      
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 32
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+---- VAR SL  shelf life of product b at customer j
+
+                                       LOWER          LEVEL          UPPER
+
+DCS.03f808cdd997cee9.Banana              .             3.7306        +INF         
+DCS.03f808cdd997cee9.Broccoli            .             5.9557        +INF         
+DCS.03f808cdd997cee9.Strawberry          .             2.8156        +INF         
+DCS.551d181c465cf86f.Banana              .             3.7306        +INF         
+DCS.551d181c465cf86f.Broccoli            .             5.9557        +INF         
+DCS.551d181c465cf86f.Strawberry          .             2.8156        +INF         
+a  .03f808cdd997cee9.Banana              .             3.6158        +INF         
+a  .03f808cdd997cee9.Broccoli            .             5.2621        +INF         
+a  .03f808cdd997cee9.Strawberry          .             2.7243        +INF         
+a  .551d181c465cf86f.Banana              .             3.4548        +INF         
+a  .551d181c465cf86f.Broccoli            .             3.2520        +INF         
+a  .551d181c465cf86f.Strawberry          .             2.0331        +INF         
+DCE.03f808cdd997cee9.Banana              .             0.0036        +INF         
+DCE.03f808cdd997cee9.Broccoli            .              .            +INF         
+DCE.03f808cdd997cee9.Strawberry          .              .            +INF         
+DCE.551d181c465cf86f.Banana              .             3.3183        +INF         
+DCE.551d181c465cf86f.Broccoli            .             2.3675        +INF         
+DCE.551d181c465cf86f.Strawberry          .             1.7022        +INF         
+
+---- VAR rg  refrigeration cost of truck k
+
+                        LOWER          LEVEL          UPPER
+
+03f808cdd997cee9          .            14.0000        +INF         
+551d181c465cf86f          .            14.0000        +INF         
+
+---- VAR C  cost of traveling from i to j using truck k
+
+                                LOWER          LEVEL          UPPER
+
+DCS.DCS.03f808cdd997cee9          .              .            +INF         
+DCS.DCS.551d181c465cf86f          .              .            +INF         
+DCS.a  .03f808cdd997cee9          .            12.2781        +INF         
+DCS.a  .551d181c465cf86f          .            12.2781        +INF         
+DCS.DCE.03f808cdd997cee9          .              .            +INF         
+DCS.DCE.551d181c465cf86f          .              .            +INF         
+a  .DCS.03f808cdd997cee9          .             0.3286        +INF         
+a  .DCS.551d181c465cf86f          .             0.3286        +INF         
+a  .a  .03f808cdd997cee9          .            12.0000        +INF         
+a  .a  .551d181c465cf86f          .            12.0000        +INF         
+a  .DCE.03f808cdd997cee9          .             0.3286        +INF         
+a  .DCE.551d181c465cf86f          .             0.3286        +INF         
+DCE.DCS.03f808cdd997cee9          .              .            +INF         
+DCE.DCS.551d181c465cf86f          .              .            +INF         
+DCE.a  .03f808cdd997cee9          .            12.2781        +INF         
+DCE.a  .551d181c465cf86f          .            12.2781        +INF         
+DCE.DCE.03f808cdd997cee9          .              .            +INF         
+DCE.DCE.551d181c465cf86f          .              .            +INF         
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 33
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE simple Using MINLP From line 261
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+                             9  PROJECTED
+GAMS 31.1.1  r4b06116 Released May 16, 2020 WEX-WEI x86 64bit/MS Windows                                                                                                                                                              11/21/20 07:38:46 Page 34
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-EXECUTION TIME       =        1.156 SECONDS      3 MB  31.1.1 r4b06116 WEX-WEI
+EXECUTION TIME       =        1.250 SECONDS      3 MB  31.1.1 r4b06116 WEX-WEI
 
 
 USER: Small MUD - 5 User License                     S200423/0001AO-WIN
@@ -1398,5 +1713,5 @@ USER: Small MUD - 5 User License                     S200423/0001AO-WIN
 
 **** FILE SUMMARY
 
-Input      D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\a-n6-k3-multi-vartemp-model-v2.2.gms
+Input      D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\CC-v2.9.gms
 Output     D:\Yousuf\Eclipse  Workspace\OptEngineV3\GamsResources\_gams_java_gjo1.lst

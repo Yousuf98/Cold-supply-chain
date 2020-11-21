@@ -83,11 +83,12 @@ public class Engine {
 	}
 
 	public synchronized static void generate(String date) {
+		
+		//****************************************************************************************************************************************//
+		/* Declare and Initialize all GAMS parameters here */
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 		LocalDateTime now = LocalDateTime.now();
 		System.out.println("New run: " + dtf.format(now));
-
-		/* Declare and Initialize all GAMS parameters here */
 
 		// Total number of locations (numL)
 		int numL = 11;
@@ -141,8 +142,10 @@ public class Engine {
 		float maxTempCost = 10; // Refrigeration Cost at Max Temp
 
 		float costPerDegree = 1; // Refrigeration cost for lowering temp by 1 degree
-
-		// Retrieve items from db and their respective parameters. Initialize and store
+		
+		//****************************************************************************************************************************************//
+		// Retrieve items from DB and their respective parameters. 
+		//Initialize and store
 		// them as objects in arraylist called 'b'
 
 		try {
@@ -187,10 +190,12 @@ public class Engine {
 					for (Product x : b) {
 						demands.add(0);
 					}
-					Location l = new Location(document.getId(), lower, upper, true, false, demands);
+					float lattitude = Float.parseFloat(document.getString("latitude"));
+					float longitude = Float.parseFloat(document.getString("longitude"));
+					Location l = new Location(document.getId(), lower, upper, true, false, demands, lattitude, longitude);
 					// Location l = new Location("DCS", lower, upper, demands); //Needs to change!
 					i.add(0, l);
-					end = new Location(document.getId(), lower, upper, false, true, demands);
+					end = new Location(document.getId(), lower, upper, false, true, demands, lattitude, longitude);
 					;
 
 				}
@@ -202,6 +207,8 @@ public class Engine {
 					ArrayList<Integer> demands = new ArrayList<Integer>();
 					float upper = Location.HoursToFloat(document.getString("maximumTimeWindow"));
 					float lower = Location.HoursToFloat(document.getString("minimumTimeWindow"));
+					float lattitude = Float.parseFloat(document.getString("latitude"));
+					float longitude = Float.parseFloat(document.getString("longitude"));
 					boolean hasOrder = false;
 					for (QueryDocumentSnapshot doc : ordersdocuments) {
 						if (doc.getString("Destination").equalsIgnoreCase(document.getId())) {
@@ -234,7 +241,7 @@ public class Engine {
 
 					if (hasOrder) {
 						numL++;
-						Location l = new Location(document.getId(), lower, upper, false, false, demands);
+						Location l = new Location(document.getId(), lower, upper, false, false, demands, lattitude, longitude);
 						i.add(l);
 
 						// System.out.println("I am here 4"); //USELESS
@@ -380,7 +387,9 @@ public class Engine {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
+		
+		//****************************************************************************************************************************************//
 		// ***Input File Formatting Module***//
 		System.out.println("\nFormatting retrieved data into input excel workbook");
 
@@ -405,7 +414,7 @@ public class Engine {
 
 			}
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet with set of Customer Locations
 		XSSFSheet sheetsubi = workbook.createSheet("subi");
 		irow = sheetsubi.createRow(0);
@@ -419,7 +428,7 @@ public class Engine {
 			String str = (i.get(j)).getName();
 			cell2.setCellValue(str);
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet with set of Starting node + Customer Locations
 		XSSFSheet sheetsub2i = workbook.createSheet("sub2i");
 		irow = sheetsub2i.createRow(0);
@@ -437,7 +446,7 @@ public class Engine {
 				cell2.setCellValue(str);
 			}
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet with set of Customer Locations subj
 
 		XSSFSheet sheetsubj = workbook.createSheet("subj");
@@ -452,7 +461,7 @@ public class Engine {
 			Cell cell2 = irow2.createCell(++columnCount);
 			cell2.setCellValue(str);
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet with set of Ending node + Customer Locations
 		XSSFSheet sheetsub2j = workbook.createSheet("sub2j");
 		irow = sheetsub2j.createRow(0);
@@ -470,12 +479,12 @@ public class Engine {
 				cell2.setCellValue(str);
 			}
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet with Trucks (K)
 		XSSFSheet sheetK = workbook.createSheet("K");
 		irow = sheetK.createRow(0);
 		cell = irow.createCell(0);
-		cell.setCellValue("Trucks");
+		cell.setCellValue("All Trucks");
 
 		irow2 = sheetK.createRow(1);
 		columnCount = -1;
@@ -484,7 +493,151 @@ public class Engine {
 			Cell cell2 = irow2.createCell(++columnCount);
 			cell2.setCellValue(str);
 		}
+		
+		//Trucks not deployed
+		irow = sheetK.createRow(2);
+		cell = irow.createCell(0);
+		cell.setCellValue("Trucks Not Deployed (TND)");
+		
+		//List out trucks
+		irow2 = sheetK.createRow(3);
+		columnCount = -1;
+		for (int j = 0; j < K.size(); j++) {
+			String str = K.get(j);
+			Cell cell2 = irow2.createCell(++columnCount);
+			cell2.setCellValue(str);
+		}
+		//Initialize trucks not deployed to 1's
+		irow2 = sheetK.createRow(4);
+		columnCount = -1;
+		for (int j = 0; j < K.size(); j++) {
+			Cell cell2 = irow2.createCell(++columnCount);
+			cell2.setCellValue(1);
+		}
+		
+		//Trucks deployed
+		irow = sheetK.createRow(5);
+		cell = irow.createCell(0);
+		cell.setCellValue("Trucks Already Deployed (TAD)");
+		
+		//List out trucks
+		irow2 = sheetK.createRow(6);
+		columnCount = -1;
+		for (int j = 0; j < K.size(); j++) {
+			String str = K.get(j);
+			Cell cell2 = irow2.createCell(++columnCount);
+			cell2.setCellValue(str);
+		}
+		//Initialize trucks deployed to 0's
+		irow2 = sheetK.createRow(7);
+		columnCount = -1;
+		for (int j = 0; j < K.size(); j++) {
+			Cell cell2 = irow2.createCell(++columnCount);
+			cell2.setCellValue(0);
+		}
+		
+		// Rank of Second-to-Last Served Customer
+		irow = sheetK.createRow(8);
+		cell = irow.createCell(0);
+		cell.setCellValue("Rank of Second-to-Last Served Customer");
 
+		// List out trucks
+		irow2 = sheetK.createRow(9);
+		columnCount = -1;
+		for (int j = 0; j < K.size(); j++) {
+			String str = K.get(j);
+			Cell cell2 = irow2.createCell(++columnCount);
+			cell2.setCellValue(str);
+		}
+		// Initialize trucks deployed to 0's
+		irow2 = sheetK.createRow(10);
+		columnCount = -1;
+		for (int j = 0; j < K.size(); j++) {
+			Cell cell2 = irow2.createCell(++columnCount);
+			cell2.setCellValue(0);
+		}
+		
+		//Current stock of trucks deployed
+		irow = sheetK.createRow(11);
+		cell = irow.createCell(0);
+		cell.setCellValue("Current stock of trucks deployed");
+		
+		//List out products
+		irow2 = sheetK.createRow(12);
+		columnCount = 0;
+		for (int j=0; j < b.size(); j++) {
+			String str = b.get(j).getName();
+			Cell cell2 = irow2.createCell(++columnCount);
+			cell2.setCellValue(str);
+		}
+		//List out trucks+stock
+		int rowCount =12;
+		for (int j = 0; j < K.size(); j++) {
+			irow = sheetK.createRow(++rowCount);
+			String str = K.get(j);
+			Cell cell2 = irow.createCell(0);
+			cell2.setCellValue(str);
+			columnCount = 0;
+			for (int index=0; index < b.size(); index++) {
+				cell2 = irow.createCell(++columnCount);
+				cell2.setCellValue(0);
+			}
+		}
+		
+		//-----------------------------------------------------------------------------------------------------------------------------------//
+		// Sheet with time-elapsed since each truck left warehouse (te)
+		XSSFSheet sheette = workbook.createSheet("te");
+		irow = sheette.createRow(0);
+		cell = irow.createCell(0);
+		cell.setCellValue("Time elapsed since each truck left warehouse");
+		
+		//List out trucks
+		irow2 = sheette.createRow(1);
+		columnCount = -1;
+		for (int j = 0; j < K.size(); j++) {
+			String str = K.get(j);
+			Cell cell2 = irow2.createCell(++columnCount);
+			cell2.setCellValue(str);
+		}
+		//Initialize times to 0
+		irow2 = sheette.createRow(2);
+		columnCount = -1;
+		for (int j = 0; j < K.size(); j++) {
+			Cell cell2 = irow2.createCell(++columnCount);
+			cell2.setCellValue(0);
+		}
+		
+		//-----------------------------------------------------------------------------------------------------------------------------------//
+		// Sheet with last served customer for each truck
+		XSSFSheet sheetLS = workbook.createSheet("LS");
+		irow = sheetLS.createRow(0);
+		cell = irow.createCell(0);
+		cell.setCellValue("Last served customer for each truck");
+		
+		//List out trucks
+		irow2 = sheetLS.createRow(1);
+		columnCount = 0;
+		for (int j = 0; j < K.size(); j++) {
+			String truck = K.get(j);
+			Cell cell2 = irow2.createCell(++columnCount);
+			cell2.setCellValue(truck);
+		}
+		
+		//List out locations and last served (0/1)
+		rowCount = 1;
+		for (int j = 0; j < i.size(); j++) {
+			irow = sheetLS.createRow(++rowCount);
+			String str = i.get(j).getName();
+			Cell cell2 = irow.createCell(0);
+			cell2.setCellValue(str);
+			columnCount = 0;
+			for (int index=0; index < b.size(); index++) {
+				cell2 = irow.createCell(++columnCount);
+				cell2.setCellValue(0);
+			}
+		}
+		
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet with Products (b)
 		XSSFSheet sheetb = workbook.createSheet("b");
 		irow = sheetb.createRow(0);
@@ -498,12 +651,12 @@ public class Engine {
 			Cell cell2 = irow2.createCell(++columnCount);
 			cell2.setCellValue(str);
 		}
-
-		// Sheet with Distances(S)
+		//-----------------------------------------------------------------------------------------------------------------------------------//
+		// Sheet with ETAs(S)
 		XSSFSheet sheetS = workbook.createSheet("S");
 		irow = sheetS.createRow(0);
 		cell = irow.createCell(0);
-		cell.setCellValue("Distances");
+		cell.setCellValue("ETA Matrix");
 
 		irow2 = sheetS.createRow(1);
 		columnCount = 0;
@@ -518,7 +671,7 @@ public class Engine {
 				cell.setCellValue(str);
 			}
 		}
-		int rowCount = 1;
+		rowCount = 1;
 		for (ArrayList<Double> l : S) {
 			Row row = sheetS.createRow(++rowCount);
 			columnCount = 0;
@@ -540,7 +693,7 @@ public class Engine {
 				cell.setCellValue(str);
 			}
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Demands (D)
 		XSSFSheet sheetD = workbook.createSheet("D");
 		irow = sheetD.createRow(0);
@@ -577,7 +730,7 @@ public class Engine {
 				cell.setCellValue(str);
 			}
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Time Windows - lower limit
 		XSSFSheet sheetL = workbook.createSheet("L");
 		irow = sheetL.createRow(0);
@@ -604,7 +757,7 @@ public class Engine {
 			cell = irow.createCell(++columnCount);
 			cell.setCellValue(t);
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Time Windows - higher limit
 		XSSFSheet sheetU = workbook.createSheet("U");
 		irow = sheetU.createRow(0);
@@ -631,7 +784,7 @@ public class Engine {
 			cell = irow.createCell(++columnCount);
 			cell.setCellValue(t);
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Maximum Shelf Life of products (MSL)
 		XSSFSheet sheetMSL = workbook.createSheet("MSL");
 		irow = sheetMSL.createRow(0);
@@ -652,7 +805,7 @@ public class Engine {
 			cell = irow.createCell(++columnCount);
 			cell.setCellValue(msl);
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Minimum Shelf Life of products (minSL)
 		XSSFSheet sheetminSL = workbook.createSheet("minSL");
 		irow = sheetminSL.createRow(0);
@@ -673,7 +826,7 @@ public class Engine {
 			cell = irow.createCell(++columnCount);
 			cell.setCellValue(msl);
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for alpha of products (alpha)
 		XSSFSheet sheetalpha = workbook.createSheet("alpha");
 		irow = sheetalpha.createRow(0);
@@ -694,7 +847,7 @@ public class Engine {
 			cell = irow.createCell(++columnCount);
 			cell.setCellValue(alp);
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for beta of products (beta)
 		XSSFSheet sheetbeta = workbook.createSheet("beta");
 		irow = sheetbeta.createRow(0);
@@ -715,7 +868,7 @@ public class Engine {
 			cell = irow.createCell(++columnCount);
 			cell.setCellValue(bet);
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for gamma of products (gamma)
 		XSSFSheet sheetgamma = workbook.createSheet("gamma");
 		irow = sheetgamma.createRow(0);
@@ -736,7 +889,7 @@ public class Engine {
 			cell = irow.createCell(++columnCount);
 			cell.setCellValue(gam);
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for unit price of products (P)
 		XSSFSheet sheetP = workbook.createSheet("P");
 		irow = sheetP.createRow(0);
@@ -757,7 +910,7 @@ public class Engine {
 			cell = irow.createCell(++columnCount);
 			cell.setCellValue(UP);
 		}
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		/*
 		 * // Sheet for Total Locations XSSFSheet sheetN = workbook.createSheet("N");
 		 * irow = sheetN.createRow(0); cell = irow.createCell(0);
@@ -765,6 +918,7 @@ public class Engine {
 		 * 
 		 * irow = sheetN.createRow(1); cell = irow.createCell(0); cell.setCellValue(N);
 		 */
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Fixed Truck Cost
 		XSSFSheet sheetW = workbook.createSheet("W");
 		irow = sheetW.createRow(0);
@@ -774,7 +928,8 @@ public class Engine {
 		irow = sheetW.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(W);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
+		/*
 		// Sheet for Product Capacity per Truck
 		XSSFSheet sheetRLoad = workbook.createSheet("RLoad");
 		irow = sheetRLoad.createRow(0);
@@ -804,14 +959,15 @@ public class Engine {
 			cell = row.createCell(0);
 			String str = trucks.get(j).getName();
 			cell.setCellValue(str);
-		}
-
+		}*/
+		//-----------------------------------------------------------------------------------------------------------------------------------//
+		/*
 		// Sheet for Binary input (Preplan/Reroute)
 		XSSFSheet sheetYs = workbook.createSheet("Ys");
 		irow = sheetYs.createRow(0);
 		cell = irow.createCell(0);
-		cell.setCellValue(0);
-
+		cell.setCellValue(0);*/
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Capacity per Truck
 		XSSFSheet sheetCap = workbook.createSheet("Cap");
 		irow = sheetCap.createRow(0);
@@ -834,7 +990,7 @@ public class Engine {
 		}
 		// cell = irow.createCell(0);
 		// cell.setCellValue(Lk);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Large Positive Number (M)
 		XSSFSheet sheetM = workbook.createSheet("M");
 		irow = sheetM.createRow(0);
@@ -844,7 +1000,7 @@ public class Engine {
 		irow = sheetM.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(M);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Fuel Cost (Moving)
 		XSSFSheet sheetfm = workbook.createSheet("fm");
 		irow = sheetfm.createRow(0);
@@ -854,7 +1010,7 @@ public class Engine {
 		irow = sheetfm.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(fm);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Fuel Cost (Idle)
 		XSSFSheet sheetfi = workbook.createSheet("fi");
 		irow = sheetfi.createRow(0);
@@ -864,7 +1020,7 @@ public class Engine {
 		irow = sheetfi.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(fi);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		/*
 		 * // Sheet for Average Speed XSSFSheet sheetv = workbook.createSheet("v"); irow
 		 * = sheetv.createRow(0); cell = irow.createCell(0);
@@ -872,7 +1028,7 @@ public class Engine {
 		 * 
 		 * irow = sheetv.createRow(1); cell = irow.createCell(0); cell.setCellValue(v);
 		 */
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Unloading Speed
 		XSSFSheet sheetz = workbook.createSheet("z");
 		irow = sheetz.createRow(0);
@@ -882,7 +1038,7 @@ public class Engine {
 		irow = sheetz.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(z);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Penalty for late
 		XSSFSheet sheetR = workbook.createSheet("R");
 		irow = sheetR.createRow(0);
@@ -892,7 +1048,7 @@ public class Engine {
 		irow = sheetR.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(R);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for EXP
 		XSSFSheet sheetexp = workbook.createSheet("EXP");
 		irow = sheetexp.createRow(0);
@@ -902,7 +1058,7 @@ public class Engine {
 		irow = sheetexp.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(EXP);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Maximum Truck Temperature
 		XSSFSheet sheetmaxTmp = workbook.createSheet("maxTemp");
 		irow = sheetmaxTmp.createRow(0);
@@ -912,7 +1068,7 @@ public class Engine {
 		irow = sheetmaxTmp.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(maxTemp);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Minimum Truck Temperature
 		XSSFSheet sheetminTemp = workbook.createSheet("minTemp");
 		irow = sheetminTemp.createRow(0);
@@ -922,7 +1078,7 @@ public class Engine {
 		irow = sheetminTemp.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(minTemp);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Refrigeration Cost at Max Temp
 		XSSFSheet sheetminTempC = workbook.createSheet("maxTempCost");
 		irow = sheetminTempC.createRow(0);
@@ -932,7 +1088,7 @@ public class Engine {
 		irow = sheetminTempC.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(maxTempCost);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
 		// Sheet for Refrigeration cost for lowering temp by 1 degree
 		XSSFSheet sheetminTempCC = workbook.createSheet("costPerDegree");
 		irow = sheetminTempCC.createRow(0);
@@ -942,11 +1098,14 @@ public class Engine {
 		irow = sheetminTempCC.createRow(1);
 		cell = irow.createCell(0);
 		cell.setCellValue(costPerDegree);
-
+		//-----------------------------------------------------------------------------------------------------------------------------------//
+		
+		
+		//****************************************************************************************************************************************//
 		// Write to excel file
 		System.out.println("\nPRINTING TO EXCEL");
 		try (FileOutputStream outputStream = new FileOutputStream(
-				new File("GamsResources\\A-n6-k3-input-multi-vartemp-v2.2.xlsx"))) {
+				new File("GamsResources\\CC-v2.9.xlsx"))) {
 			workbook.write(outputStream);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -955,7 +1114,9 @@ public class Engine {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
+		
+		//****************************************************************************************************************************************//
 		// GAMS setup module and Execution//
 		System.out.println("\nGenerating solution using GAMS api");
 		// specific workspace information is created example: C:/Desktop/Workspace
@@ -970,11 +1131,13 @@ public class Engine {
 		// run GAMSJob "t1" with GAMSOptions "opt1"
 		// Creating a JOB to execute the model.
 		// GAMSJob jobGams = workspace.addJobFromString(model);
-		GAMSJob jobGams = workspace.addJobFromFile("a-n6-k3-multi-vartemp-model-v2.2");
+		GAMSJob jobGams = workspace.addJobFromFile("CC-v2.9");
 		// Running model
 		jobGams.run(opt1);
 		// System.out.println("Done");
-
+		
+		
+		//****************************************************************************************************************************************//
 		// **Output Reading + Formatting module**//
 		System.out.println("\nReading output File produced and formatting for upload to database...");
 		// Create arrays for storing routes of each truck
@@ -984,7 +1147,7 @@ public class Engine {
 			Routes.get(j).add(i.get(0).getName()); // Initialize each array with DCS
 		}
 
-		String excelFilePath = "GamsResources\\A-n6-k3-output-multi-vartemp-v2.2.xlsx";
+		String excelFilePath = "GamsResources\\CC-v2.9-output.xlsx";
 		Workbook wb;
 		try {
 
@@ -998,12 +1161,15 @@ public class Engine {
 
 			// Get cell from where onwards Locations are stored
 			int startingIndex = 0;
+			int EncounterCount = 0;
 			while (true) {
 				Row row = firstSheet.getRow(startingIndex);
 				try {
 					Cell val = row.getCell(0);
-					if (val.getCellType()==CellType.STRING && val.getStringCellValue().equals("DCS"))
-						break;
+					if (val.getCellType()==CellType.STRING && val.getStringCellValue().equals("DCS")) {
+						if (EncounterCount == 2)
+							break;
+						EncounterCount++; }
 					startingIndex++;
 				} catch (NullPointerException e) {
 					// cell is empty
